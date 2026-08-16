@@ -1,0 +1,22 @@
+[Unit]
+Description=GOX Chat Dev gated worker
+After=gox-chat-dev.service
+Requires=gox-chat-dev.service
+
+[Service]
+Type=simple
+User=gox
+Group=gox
+WorkingDirectory=/opt/gox
+Environment=GOX_DATA_DIR=/var/lib/gox/chat-dev
+ExecStart=/usr/bin/python3 /opt/gox/chat_dev/worker.py
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/gox/chat-dev
+
+[Install]
+WantedBy=multi-user.target
