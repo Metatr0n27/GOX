@@ -1,0 +1,13 @@
+[Unit]
+Description=GOX approved release pull deployment
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+ExecStart=/usr/local/sbin/gox-pull-deploy
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
