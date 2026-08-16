@@ -31,7 +31,6 @@ PREV=""
 if [ -L "$LIVE" ]; then
   PREV=$(readlink -f "$LIVE" 2>/dev/null || true)
 elif [ -d "$LIVE" ]; then
-  # Preserve the first manually-staged deployment as an immutable rollback target.
   PREV="$ROOT/releases/manual-before-$NEW_SHA"
   if [ ! -e "$PREV" ]; then cp -a "$LIVE" "$PREV"; fi
   rm -rf "$LIVE"
@@ -41,16 +40,28 @@ ln -s "$STAGE" "$ROOT/live.next"
 mv -T "$ROOT/live.next" "$LIVE"
 
 systemctl restart gox-chat-dev.service gox-chat-worker.service
-if ! curl -fsS --max-time 5 "$HEALTH" >/dev/null; then
+
+healthy=0
+attempt=1
+while [ "$attempt" -le 15 ]; do
+  if curl -fsS --max-time 3 "$HEALTH" >/dev/null 2>&1; then
+    healthy=1
+    break
+  fi
+  sleep 1
+  attempt=$((attempt + 1))
+done
+
+if [ "$healthy" -ne 1 ]; then
   if [ -n "$PREV" ] && [ -d "$PREV" ]; then
     rm -f "$LIVE"
     ln -s "$PREV" "$LIVE"
     systemctl restart gox-chat-dev.service gox-chat-worker.service || true
   fi
-  logger -t gox-deploy "deployment $NEW_SHA failed health check; rolled back"
+  logger -t gox-deploy "deployment $NEW_SHA failed health check after retries; rolled back"
   exit 1
 fi
 
 printf '%s\n' "$NEW_SHA" > "$STATE/deployed-sha"
 printf '%s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$NEW_SHA" >> "$STATE/history.log"
-logger -t gox-deploy "deployed $NEW_SHA successfully"
+logger -t gox-deploy "deployed $NEW_SHA successfully after health check attempt $attempt"
