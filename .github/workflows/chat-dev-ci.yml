@@ -1,0 +1,44 @@
+name: Chat Dev CI
+
+on:
+  pull_request:
+    paths:
+      - 'chat_dev/**'
+      - 'deploy/**'
+      - '.github/workflows/chat-dev-ci.yml'
+  push:
+    branches: ['agent/chat-dev-foundation', 'release/chat-dev']
+    paths:
+      - 'chat_dev/**'
+      - 'deploy/**'
+      - '.github/workflows/chat-dev-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile Python
+        run: python -m compileall -q chat_dev
+      - name: Adapter tests
+        run: python chat_dev/test_adapters.py
+      - name: Revenue tests
+        run: python chat_dev/test_revenue.py
+      - name: Chat Dev smoke test
+        run: python chat_dev/test_smoke.py
+      - name: Check deployment shell syntax
+        run: sh -n deploy/pull-deploy.sh
+      - name: Reject obvious committed secrets
+        shell: bash
+        run: |
+          if git grep -nE '(BEGIN (RSA|OPENSSH|EC) PRIVATE KEY|GOX_AUTH_PASSWORD=[^$]|password\s*[:=]\s*["'"'][^"'"']+)' -- ':!docs/**'; then
+            echo 'Potential committed secret detected.' >&2
+            exit 1
+          fi
