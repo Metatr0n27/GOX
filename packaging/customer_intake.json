@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "questions": [
+    {"id":"goal","question":"What do you want GOX to help you accomplish?","required":true},
+    {"id":"work_type","question":"What kinds of paid work, customers, or opportunities are you looking for?","required":true},
+    {"id":"capabilities","question":"What can you reliably deliver today?","required":true},
+    {"id":"minimum_value","question":"What is the minimum opportunity value worth pursuing?","required":true},
+    {"id":"channels","question":"Which contact/sales channels can GOX use with you?","required":true},
+    {"id":"delivery","question":"Do you want opportunity finding only, assisted closing, or fulfillment workflow too?","required":true}
+  ],
+  "output": {
+    "creates": ["customer profile", "capability allowlist", "money lanes", "contact-channel policy", "opportunity filters", "sales scoreboard"],
+    "activation_gate": "GOX must pass a customer-specific readiness test before activation"
+  }
+}
