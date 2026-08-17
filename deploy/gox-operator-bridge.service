@@ -1,0 +1,15 @@
+[Unit]
+Description=GOX Operator allowlisted control bridge
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/gox-live
+ExecStart=/usr/bin/python3 /opt/gox-live/chat_dev/operator_bridge.py
+User=root
+Group=root
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+TimeoutStartSec=240
