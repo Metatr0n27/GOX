@@ -1,0 +1,12 @@
+[Unit]
+Description=Poll GOX Operator control queue
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=2min
+RandomizedDelaySec=15s
+Persistent=true
+Unit=gox-operator-bridge.service
+
+[Install]
+WantedBy=timers.target
