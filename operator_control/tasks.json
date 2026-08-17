@@ -10,6 +10,8 @@
     {"id":"2026-08-17-buyers-002","action":"refresh-buyer-requests","timeout_seconds":180},
     {"id":"2026-08-17-finish-002","action":"finish-gox-cycle","timeout_seconds":180},
     {"id":"2026-08-17-payment-readiness-001","action":"finish-gox-cycle","timeout_seconds":180},
-    {"id":"2026-08-17-payment-status-001","action":"status-workers","timeout_seconds":60}
+    {"id":"2026-08-17-payment-status-001","action":"status-workers","timeout_seconds":60},
+    {"id":"2026-08-17-expanded-buyers-001","action":"refresh-buyer-requests","timeout_seconds":240},
+    {"id":"2026-08-17-first-dollar-audit-001","action":"first-dollar-audit","timeout_seconds":60}
   ]
 }
