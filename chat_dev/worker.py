@@ -48,9 +48,22 @@ def retry_or_quarantine(job,error):
     finish(job['id'],status,error=error)
 
 
+def payload_for(job):
+    kind=job.get('kind','plan')
+    if kind=='creator_plan':
+        try:
+            payload=json.loads(job['message'])
+        except Exception as exc:
+            raise ValidationError(f"creator_plan payload is not valid JSON: {exc}") from exc
+        if not isinstance(payload,dict):
+            raise ValidationError("creator_plan payload must be an object")
+        return payload
+    return {"message":job['message']}
+
+
 def handle(job):
     try:
-        result=execute(job.get('kind','plan'),{"message":job['message']})
+        result=execute(job.get('kind','plan'),payload_for(job))
         finish(job['id'],'complete',json.dumps(result))
     except (UnknownCapability,ValidationError) as exc:
         finish(job['id'],'blocked',error=str(exc))
