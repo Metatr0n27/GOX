@@ -26,6 +26,7 @@ rm -rf "$STAGE"
 mkdir -p "$STAGE"
 cp -a "$ROOT/repo/chat_dev" "$STAGE/chat_dev"
 cp -a "$ROOT/repo/deploy" "$STAGE/deploy"
+[ ! -d "$ROOT/repo/revenue_engine" ] || cp -a "$ROOT/repo/revenue_engine" "$STAGE/revenue_engine"
 
 PREV=""
 if [ -L "$LIVE" ]; then
@@ -44,18 +45,14 @@ systemctl restart gox-chat-dev.service gox-chat-worker.service
 healthy=0
 attempt=1
 while [ "$attempt" -le 15 ]; do
-  if curl -fsS --max-time 3 "$HEALTH" >/dev/null 2>&1; then
-    healthy=1
-    break
-  fi
+  if curl -fsS --max-time 3 "$HEALTH" >/dev/null 2>&1; then healthy=1; break; fi
   sleep 1
   attempt=$((attempt + 1))
 done
 
 if [ "$healthy" -ne 1 ]; then
   if [ -n "$PREV" ] && [ -d "$PREV" ]; then
-    rm -f "$LIVE"
-    ln -s "$PREV" "$LIVE"
+    rm -f "$LIVE"; ln -s "$PREV" "$LIVE"
     systemctl restart gox-chat-dev.service gox-chat-worker.service || true
   fi
   logger -t gox-deploy "deployment $NEW_SHA failed health check after retries; rolled back"
