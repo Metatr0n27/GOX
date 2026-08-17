@@ -1,0 +1,15 @@
+[Unit]
+Description=GOX bounded Finish GOX runtime repair cycle
+After=network-online.target gox-chat-dev.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/gox-live
+ExecStart=/usr/bin/python3 /opt/gox-live/chat_dev/finish_gox_runner.py
+User=root
+Group=root
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+TimeoutStartSec=180
