@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "editions": [
+    {
+      "id": "starter",
+      "name": "GOX Starter",
+      "price_usd": 199,
+      "customer": "freelancer or solo operator",
+      "promise": "Find relevant paid opportunities, rank them, prepare responses, and track the path to payment.",
+      "includes": ["buyer/opportunity scout", "qualification", "proposal drafting", "closer outbox", "reply tracking", "first-dollar scoreboard"],
+      "excludes": ["custom integrations", "marketplace credential setup", "done-for-you fulfillment"]
+    },
+    {
+      "id": "money-hunter",
+      "name": "GOX Money Hunter",
+      "price_usd": 49,
+      "billing": "monthly",
+      "customer": "freelancer or job seeker",
+      "promise": "Continuously surface matched paid opportunities and make the next action obvious.",
+      "includes": ["opportunity matching", "freshness ranking", "response drafting", "reply/follow-up tracking", "money dashboard"],
+      "excludes": ["guaranteed earnings", "impersonation", "automatic marketplace login"]
+    },
+    {
+      "id": "agency",
+      "name": "GOX Agency Edition",
+      "price_usd": 999,
+      "customer": "automation agency or consultancy",
+      "promise": "Turn client demand into scoped orders, fulfillment tasks, QA evidence, and payment tracking.",
+      "includes": ["client intake", "sales routing", "order intake", "delivery queue", "acceptance QA", "payment reconciliation", "white-label operating workflow"],
+      "excludes": ["client acquisition guarantee", "bank/processor identity verification"]
+    }
+  ]
+}
