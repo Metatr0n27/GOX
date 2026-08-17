@@ -5,6 +5,9 @@
     {"id":"2026-08-16-n8n-001","action":"verify-n8n","timeout_seconds":240},
     {"id":"2026-08-16-buyers-001","action":"refresh-buyer-requests","timeout_seconds":180},
     {"id":"2026-08-16-finish-001","action":"finish-gox-cycle","timeout_seconds":180},
-    {"id":"2026-08-16-status-002","action":"status-workers","timeout_seconds":60}
+    {"id":"2026-08-16-status-002","action":"status-workers","timeout_seconds":60},
+    {"id":"2026-08-17-n8n-002","action":"verify-n8n","timeout_seconds":240},
+    {"id":"2026-08-17-buyers-002","action":"refresh-buyer-requests","timeout_seconds":180},
+    {"id":"2026-08-17-finish-002","action":"finish-gox-cycle","timeout_seconds":180}
   ]
 }
