@@ -17,17 +17,23 @@ _Last updated: 2026-08-17_
 | QA Lead | 🟢 BUILDING | Define acceptance tests before delivery | Technical plan ready |
 | Gap Closer | 🟢 BUILDING | Detect and remove missing tools, integrations, scripts, repo mistakes, and setup gaps | Any blocker appears |
 | Chat Dev | 🟢 BUILDING | Prebuild reusable delivery kits and implement revenue work immediately | Buyer-specific inputs or reusable kit need |
+| GitHub Pattern Team | 🟢 BUILDING | Find proven open-source patterns, audit licenses, rebuild useful architecture cleanly | New capability gap |
+| Browser Team | 🟡 WAITING ON OWNER LOGIN | Persistent Playwright profiles for Upwork/Freelancer and service workflow automation | First authenticated session created |
 | Closer | 🟡 WAITING ON INPUT | Reduce unavoidable marketplace/account actions to one smallest step | Award/submission/account action required |
 
 ## Active Revenue Stack
 - `agents/chat-dev.md` — visible development agent.
 - `agents/revenue-team.md` — opportunity, pricing, proposal, technical, QA, and closing workflow.
 - `agents/gap-closer.md` — proactive dependency/blocker resolution.
+- `agents/github-pattern-team.md` — proven GitHub pattern discovery and clean-room adaptation.
+- `agents/browser-team.md` — authenticated browser/session/workflow team.
+- `browser_stack/auth_browser.py` — persistent Playwright browser launcher.
+- `browser_stack/README.md` — one-time authentication and session-reuse instructions.
 - `revenue/PIPELINE.md` — inspectable $5,000/day pipeline board.
 - `revenue/PREFLIGHT_TEMPLATE.md` — mandatory bid preflight before promising delivery.
 
 ## Current Blocker
-Authenticated marketplace submission remains unavailable from the current ChatGPT tool environment. This is an external access limitation, not an owner-permission limitation. All surrounding work must be automated before escalation.
+The browser stack now exists in GOX. The remaining blocker is the first real account login/MFA/CAPTCHA in a visible browser, which must be performed by the authorized account owner. After that, GOX can reuse the persistent local browser profile where the site permits session persistence.
 
 ## Current Reality
 - Revenue work belongs in the active GOX umbrella repository unless a product-specific active repository is explicitly selected.
