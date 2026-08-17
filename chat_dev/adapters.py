@@ -1,6 +1,15 @@
 #!/usr/bin/env python3
 """Allowlisted GOX capability adapters with validation and hard timeouts."""
 import multiprocessing as mp
+import sys
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from creator_engine import build_creator_plan
 
 
 class AdapterError(Exception):
@@ -30,6 +39,13 @@ def _plan(payload):
     return {"accepted": True, "capability": "plan", "message": message}
 
 
+def _creator_plan(payload):
+    try:
+        return build_creator_plan(payload)
+    except ValueError as exc:
+        raise ValidationError(str(exc)) from exc
+
+
 REGISTRY = {
     "plan": {
         "handler": _plan,
@@ -37,7 +53,14 @@ REGISTRY = {
         "timeout_seconds": 10.0,
         "side_effecting": False,
         "description": "Validate and acknowledge a planning request.",
-    }
+    },
+    "creator_plan": {
+        "handler": _creator_plan,
+        "permission_class": "read-only",
+        "timeout_seconds": 10.0,
+        "side_effecting": False,
+        "description": "Build a bounded, paper-backed Creator Engine workflow plan.",
+    },
 }
 
 
