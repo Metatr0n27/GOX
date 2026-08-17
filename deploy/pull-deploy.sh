@@ -9,6 +9,14 @@ PREV=""; if [ -L "$LIVE" ]; then PREV=$(readlink -f "$LIVE" 2>/dev/null || true)
 ln -s "$STAGE" "$ROOT/live.next"; mv -T "$ROOT/live.next" "$LIVE"; systemctl restart gox-chat-dev.service gox-chat-worker.service
 healthy=0; attempt=1; while [ "$attempt" -le 15 ]; do if curl -fsS --max-time 3 "$HEALTH" >/dev/null 2>&1; then healthy=1; break; fi; sleep 1; attempt=$((attempt + 1)); done
 if [ "$healthy" -ne 1 ]; then if [ -n "$PREV" ] && [ -d "$PREV" ]; then rm -f "$LIVE"; ln -s "$PREV" "$LIVE"; systemctl restart gox-chat-dev.service gox-chat-worker.service || true; fi; logger -t gox-deploy "deployment $NEW_SHA failed health check after retries; rolled back"; exit 1; fi
-# Optional post-health bootstrap. Failure is logged but does not take ChatDev down.
+# Post-health bootstrap: install optional recurring workers idempotently.
 if [ -x "$LIVE/deploy/install-revenue-scout.sh" ]; then "$LIVE/deploy/install-revenue-scout.sh" || logger -t gox-deploy "revenue scout bootstrap failed for $NEW_SHA"; fi
+for unit in gox-finish-gox.service gox-finish-gox.timer gox-operator-bridge.service gox-operator-bridge.timer; do
+  if [ -f "$LIVE/deploy/$unit" ]; then install -m 0644 "$LIVE/deploy/$unit" "/etc/systemd/system/$unit"; fi
+done
+systemctl daemon-reload
+[ ! -f /etc/systemd/system/gox-finish-gox.timer ] || systemctl enable --now gox-finish-gox.timer || logger -t gox-deploy "Finish GOX timer enable failed for $NEW_SHA"
+[ ! -f /etc/systemd/system/gox-operator-bridge.timer ] || systemctl enable --now gox-operator-bridge.timer || logger -t gox-deploy "Operator Bridge timer enable failed for $NEW_SHA"
+# Run bridge once immediately so queued verification jobs do not wait for the timer.
+[ ! -f /etc/systemd/system/gox-operator-bridge.service ] || systemctl start gox-operator-bridge.service || logger -t gox-deploy "Operator Bridge first run failed for $NEW_SHA"
 printf '%s\n' "$NEW_SHA" > "$STATE/deployed-sha"; printf '%s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$NEW_SHA" >> "$STATE/history.log"; logger -t gox-deploy "deployed $NEW_SHA successfully after health check attempt $attempt"
