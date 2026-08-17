@@ -1,0 +1,12 @@
+[Unit]
+Description=Refresh GOX revenue opportunities
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=15min
+RandomizedDelaySec=60
+Persistent=true
+Unit=gox-revenue-scout.service
+
+[Install]
+WantedBy=timers.target
