@@ -11,13 +11,14 @@ from dataclasses import asdict
 from typing import Iterable
 from demand_to_cash import Opportunity
 
-USER_AGENT="GOX-BuyerRequestScout/0.2 (read-only public feed)"
+USER_AGENT="GOX-BuyerRequestScout/0.3 (read-only public feed)"
 ATOM={"a":"http://www.w3.org/2005/Atom"}
 BUYER_MARKERS=(
  "[hiring]","[paid]","hiring ","looking to hire","looking for someone","looking for an experienced",
  "looking for a developer","looking for an automation","we're looking for","we are looking for",
- "need someone","need help with","seeking ","contractor needed","paid project","accepting bids",
- "looking for a specialist","looking for a freelancer",
+ "need someone","need a developer","need an automation","need help with","seeking ","contractor needed",
+ "paid project","accepting bids","looking for a specialist","looking for a freelancer","freelancer wanted",
+ "developer wanted","automation specialist","automation engineer",
 )
 REJECT_MARKERS=("[for hire]","for hire","available for work","hire me","my services","i'm available","i am available")
 MONEY_RE=re.compile(r"\$\s?(\d{2,6})(?:\s*[-–—to]+\s*\$?\s?(\d{2,6}))?",re.I)
@@ -60,12 +61,20 @@ def fetch_atom(url,source,timeout=10):
  return parse_atom(raw,source)
 
 def default_sources():
+ # Broad feeds find unexpected demand; focused Reddit search feeds increase the
+ # chance of seeing explicit automation requests before they disappear down /new.
  return [
   ("reddit-forhire-new","https://www.reddit.com/r/forhire/new/.rss"),
   ("reddit-freelance-forhire-new","https://www.reddit.com/r/freelance_forhire/new/.rss"),
   ("reddit-n8n-new","https://www.reddit.com/r/n8n/new/.rss"),
+  ("reddit-automation-new","https://www.reddit.com/r/automation/new/.rss"),
   ("reddit-ai-automations-new","https://www.reddit.com/r/AiAutomations/new/.rss"),
   ("reddit-remote-python-new","https://www.reddit.com/r/remotepython/new/.rss"),
+  ("reddit-search-hiring-n8n","https://www.reddit.com/search.rss?q=%22hiring%22%20n8n&sort=new"),
+  ("reddit-search-looking-n8n","https://www.reddit.com/search.rss?q=%22looking%20for%22%20n8n&sort=new"),
+  ("reddit-search-automation-specialist","https://www.reddit.com/search.rss?q=%22automation%20specialist%22%20hiring&sort=new"),
+  ("reddit-search-workflow-freelancer","https://www.reddit.com/search.rss?q=%22workflow%22%20%22freelancer%22%20automation&sort=new"),
+  ("reddit-search-need-automation","https://www.reddit.com/search.rss?q=%22need%22%20%22automation%22%20%22%24%22&sort=new"),
  ]
 
 def scout(sources:Iterable[tuple[str,str]]|None=None):
@@ -74,7 +83,8 @@ def scout(sources:Iterable[tuple[str,str]]|None=None):
   try: items=fetch_atom(url,source)
   except Exception: continue
   for item in items:
-   key=(item.source,item.external_id)
+   # Deduplicate across overlapping feeds by canonical URL when available.
+   key=item.source_url.split("?",1)[0].rstrip("/") if item.source_url else (item.source,item.external_id)
    if key in seen: continue
    seen.add(key); out.append(item)
  return out
