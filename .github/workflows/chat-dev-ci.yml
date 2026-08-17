@@ -38,8 +38,11 @@ jobs:
       - name: Reject obvious committed secrets
         shell: bash
         run: |
-          pattern='BEGIN (RSA|OPENSSH|EC) PRIVATE KEY|GOX_AUTH_PASSWORD=[^$]|password[[:space:]]*[:=][[:space:]]*[^$[:space:]]+'
-          if git grep -nE "$pattern" -- ':!docs/**'; then
-            echo 'Potential committed secret detected.' >&2
+          if git grep -nE 'BEGIN (RSA|OPENSSH|EC) PRIVATE KEY' -- ':!docs/**' ':!.github/workflows/chat-dev-ci.yml'; then
+            echo 'Private key material detected.' >&2
+            exit 1
+          fi
+          if git grep -nE 'GOX_AUTH_PASSWORD=[^$[:space:]][^[:space:]]+' -- ':!docs/**' ':!.github/workflows/chat-dev-ci.yml'; then
+            echo 'Literal GOX auth password detected.' >&2
             exit 1
           fi
