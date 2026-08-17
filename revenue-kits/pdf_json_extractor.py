@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Reusable PDF-to-JSON extraction scaffold for fast client delivery.
+"""Reusable PDF-to-JSON extractor for bounded client delivery.
 
-Buyer-specific parsing rules and schemas are injected after award.
+Uses PyPDF2 when available. The output is useful immediately for searchable/text
+PDFs and keeps a clean adapter boundary for buyer-specific schemas.
 """
 from __future__ import annotations
 
@@ -23,30 +24,59 @@ def configure_logging(log_path: Path) -> None:
     )
 
 
+def _load_pdf_reader(pdf_path: Path):
+    try:
+        from PyPDF2 import PdfReader
+    except ImportError as exc:
+        raise RuntimeError("PyPDF2 is required: pip install PyPDF2") from exc
+    return PdfReader(str(pdf_path))
+
+
 def extract_pdf(pdf_path: Path, schema: dict[str, Any] | None = None) -> dict[str, Any]:
-    """Adapter boundary for buyer-specific PDF parsing."""
     if not pdf_path.exists():
         raise FileNotFoundError(pdf_path)
-    return {
+    reader = _load_pdf_reader(pdf_path)
+    pages: list[dict[str, Any]] = []
+    full_text_parts: list[str] = []
+    for index, page in enumerate(reader.pages, start=1):
+        text = page.extract_text() or ""
+        full_text_parts.append(text)
+        pages.append({"page": index, "text": text, "chars": len(text)})
+
+    full_text = "\n\n".join(full_text_parts)
+    metadata = {str(k): str(v) for k, v in (reader.metadata or {}).items()}
+    result: dict[str, Any] = {
         "source_file": pdf_path.name,
-        "status": "adapter_required",
+        "status": "extracted",
+        "page_count": len(reader.pages),
+        "text_chars": len(full_text),
+        "metadata": metadata,
         "schema": schema or {},
-        "data": {},
+        "data": {
+            "text": full_text,
+            "pages": pages,
+        },
     }
+    return result
 
 
 def validate_result(result: dict[str, Any]) -> None:
-    required = {"source_file", "status", "data"}
+    required = {"source_file", "status", "page_count", "data"}
     missing = required - result.keys()
     if missing:
         raise ValueError(f"Missing required output keys: {sorted(missing)}")
+    if result["status"] != "extracted":
+        raise ValueError("PDF extraction did not complete")
 
 
 def process_directory(input_dir: Path, output_dir: Path, schema_path: Path | None) -> int:
     output_dir.mkdir(parents=True, exist_ok=True)
     schema = json.loads(schema_path.read_text(encoding="utf-8")) if schema_path else None
     failures = 0
-    for pdf_path in sorted(input_dir.glob("*.pdf")):
+    pdfs = sorted(input_dir.glob("*.pdf"))
+    if not pdfs:
+        LOG.warning("no PDF files found in %s", input_dir)
+    for pdf_path in pdfs:
         try:
             result = extract_pdf(pdf_path, schema)
             validate_result(result)
@@ -60,7 +90,7 @@ def process_directory(input_dir: Path, output_dir: Path, schema_path: Path | Non
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description="Extract searchable PDF text into JSON")
     parser.add_argument("input_dir", type=Path)
     parser.add_argument("output_dir", type=Path)
     parser.add_argument("--schema", type=Path)
