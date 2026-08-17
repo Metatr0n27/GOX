@@ -4,36 +4,20 @@ import hashlib
 import json
 import sqlite3
 import time
+from datetime import datetime
 
 
 def init_revenue_schema(conn):
     conn.execute("""CREATE TABLE IF NOT EXISTS opportunities(
-        id TEXT PRIMARY KEY,
-        source TEXT NOT NULL,
-        source_ref TEXT NOT NULL,
-        title TEXT NOT NULL,
-        deliverable TEXT NOT NULL,
-        gross_payout REAL NOT NULL DEFAULT 0,
-        estimated_cost REAL NOT NULL DEFAULT 0,
-        win_probability REAL NOT NULL DEFAULT 0,
-        same_day_probability REAL NOT NULL DEFAULT 0,
-        fulfillment_minutes INTEGER,
-        capability TEXT,
-        status TEXT NOT NULL DEFAULT 'found',
-        blocker TEXT,
-        captured_at REAL NOT NULL,
-        updated_at REAL NOT NULL,
-        UNIQUE(source, source_ref)
-    )""")
+        id TEXT PRIMARY KEY, source TEXT NOT NULL, source_ref TEXT NOT NULL, title TEXT NOT NULL,
+        deliverable TEXT NOT NULL, gross_payout REAL NOT NULL DEFAULT 0, estimated_cost REAL NOT NULL DEFAULT 0,
+        win_probability REAL NOT NULL DEFAULT 0, same_day_probability REAL NOT NULL DEFAULT 0,
+        fulfillment_minutes INTEGER, capability TEXT, status TEXT NOT NULL DEFAULT 'found', blocker TEXT,
+        captured_at REAL NOT NULL, updated_at REAL NOT NULL, UNIQUE(source, source_ref))""")
     conn.execute("""CREATE TABLE IF NOT EXISTS revenue_events(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        opportunity_id TEXT,
-        event_type TEXT NOT NULL,
-        amount REAL NOT NULL DEFAULT 0,
-        evidence TEXT,
-        created_at REAL NOT NULL,
-        FOREIGN KEY(opportunity_id) REFERENCES opportunities(id)
-    )""")
+        id INTEGER PRIMARY KEY AUTOINCREMENT, opportunity_id TEXT, event_type TEXT NOT NULL,
+        amount REAL NOT NULL DEFAULT 0, evidence TEXT, created_at REAL NOT NULL,
+        FOREIGN KEY(opportunity_id) REFERENCES opportunities(id))""")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_opportunity_status ON opportunities(status, captured_at)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_revenue_created ON revenue_events(created_at)")
 
@@ -49,7 +33,6 @@ def clamp_probability(value):
 def score(gross_payout, estimated_cost, win_probability, same_day_probability, fulfillment_minutes=None):
     net=max(0.0,float(gross_payout)-float(estimated_cost))
     expected=net*clamp_probability(win_probability)*clamp_probability(same_day_probability)
-    # A separate efficiency metric prevents tiny fast jobs from replacing expected cash value.
     hours=max((fulfillment_minutes or 60)/60.0, 0.25)
     return {"net_payout":round(net,2),"expected_value_today":round(expected,2),"expected_value_per_hour":round(expected/hours,2)}
 
@@ -74,3 +57,25 @@ def record_revenue(conn, opportunity_id, amount, evidence):
 def collected_since(conn, since):
     row=conn.execute("SELECT COALESCE(SUM(amount),0) FROM revenue_events WHERE event_type='collected' AND created_at>=?",(since,)).fetchone()
     return float(row[0])
+
+
+def local_day_start_timestamp(now=None):
+    now = now or datetime.now().astimezone()
+    start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    return start.timestamp()
+
+
+def collected_today(conn):
+    return collected_since(conn, local_day_start_timestamp())
+
+
+def revenue_summary(conn, target=500.0):
+    current = round(collected_today(conn), 2)
+    target = float(target)
+    return {
+        "current": current,
+        "target": round(target, 2),
+        "remaining": round(max(0.0, target-current), 2),
+        "attainment_pct": round((current/target*100.0) if target > 0 else 0.0, 1),
+        "counting_rule": "verified collected revenue only",
+    }
