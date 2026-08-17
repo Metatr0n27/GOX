@@ -15,20 +15,23 @@
 9. TESTING
 10. DELIVERED
 
-## Active Targets
+## Active Targets — 2026-08-17
 
 | Target | Platform | Value | Stage | Fit | Blocker | Next Action |
 |---|---:|---:|---|---|---|---|
-| High-value Python automation/data jobs | Upwork/Freelancer | $1k-$5k | FOUND | High when bounded and Python-first | Marketplace authenticated submission | Revenue Team qualify + preflight |
-| PDF/data extraction | Upwork/Freelancer | $500-$1k+ | FOUND | High | Buyer files/schema after award | Chat Dev prebuild reusable kit |
-| Browser workflow automation | Upwork/Freelancer | $500-$2k+ | FOUND | High if standard browser flow | Buyer URL/credentials after award | Technical Lead preflight selectors/auth |
+| Large scale data extraction | Upwork | $1,550 fixed | QUALIFIED | High: scraping, extraction, validation | Marketplace submission | Proposal pack + implementation plan |
+| PDF Extraction Specialist | Upwork | $1,000 fixed, negotiable | PREFLIGHTED | Very high: Python, PDF parsing, logs, validation | Marketplace submission; buyer corpus/spec after award | Submit proposal; adapt reusable kit after award |
+| MVP Data Extraction System for Knowledge Graph | Upwork | $1,000 fixed | QUALIFIED | High: Python + structured APIs/data normalization | Marketplace submission; exact entity schema | Proposal pack + architecture |
+| Online Yellow Pages Data Scraping | Upwork | $1,000 fixed | QUALIFIED | High: scraping + normalized business data | Marketplace submission; target directory/fields | Proposal pack + scraper adapter |
+| Python PDF Data Extraction | Upwork | $500 fixed | PREFLIGHTED | Very high: strict JSON, layout variance, failure logs | Marketplace submission; exact schema/sample PDFs | Submit proposal; adapt PDF kit |
+
+**Visible target stack value: $5,050.** This is target value, not earned revenue. Revenue only counts after award/funding.
 
 ## Revenue Math
-A day reaches target with any combination such as:
-- 1 x $5,000
-- 2 x $2,500
-- 1 x $3,000 + 2 x $1,000
-- 5 x $1,000
+The current live stack totals $5,050 if all five are awarded. The operating strategy is to submit highest-fit proposals first and use the same reusable delivery components across multiple jobs without misrepresenting prior work.
+
+## Current Hard Blocker
+Authenticated Upwork/Freelancer submission is not exposed through the current connected tool stack. Everything before and after that click should be automated or prebuilt.
 
 ## Owner Escalation
-Owner should only see rows that have reached a genuinely unavoidable authenticated/account action.
+Owner should only see a target when the proposal is ready and the only remaining step is the authenticated marketplace action, buyer-specific secret/input, identity check, or financial/legal authorization.
