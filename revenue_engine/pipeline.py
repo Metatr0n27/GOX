@@ -32,9 +32,8 @@ def build_queue():
   if key in seen:duplicates+=1;continue
   seen.add(key);q=qualify(opportunity,verified_capabilities())
   if not q.accepted:rejected+=1;continue
-  rows.append({"id":f"{opportunity.source}:{opportunity.external_id}","dedupe_key":key,"state":"PROPOSAL_READY_NEEDS_ROUTE","source":opportunity.source,"source_url":opportunity.source_url,"title":opportunity.title,"budget_min":opportunity.budget_min,"budget_max":opportunity.budget_max,"currency":opportunity.currency,"score":q.score,"capability":q.capability,"proposal":draft_proposal(opportunity,q),"scouted_at":now,"expires_at":(now_dt+timedelta(hours=MAX_AGE_HOURS)).isoformat()})
+  rows.append({"id":f"{opportunity.source}:{opportunity.external_id}","dedupe_key":key,"state":"PROPOSAL_READY_NEEDS_ROUTE","source":opportunity.source,"source_url":opportunity.source_url,"title":opportunity.title,"description":opportunity.description,"budget_min":opportunity.budget_min,"budget_max":opportunity.budget_max,"currency":opportunity.currency,"score":q.score,"capability":q.capability,"proposal":draft_proposal(opportunity,q),"scouted_at":now,"expires_at":(now_dt+timedelta(hours=MAX_AGE_HOURS)).isoformat()})
  rows.sort(key=lambda x:(x["score"],x["budget_max"]),reverse=True);items=rows[:MAX_ITEMS];payload={"generated_at":now,"count":len(items),"scanned":scanned,"rejected":rejected,"duplicates_suppressed":duplicates,"max_age_hours":MAX_AGE_HOURS,"items":items};_atomic_write(QUEUE,payload)
- # Build the Closer Outbox after the opportunity file is durable. Local import avoids circular import at module load.
  try:
   from closer_outbox import build_outbox
   payload["closer_outbox"]=build_outbox()
