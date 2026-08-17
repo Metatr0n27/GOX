@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Sales execution policy focused on real transactions, not internal activity."""
+"""Autonomous sales execution policy focused on transactions, not internal activity."""
 from __future__ import annotations
 
 TEAM=[
+ {"name":"Revenue Captain","owns":"run the batch, enforce priorities, stop only at real external gates"},
  {"name":"Fresh Cash Hunter","owns":"find explicit paid work posted recently, prioritize hours-old demand"},
  {"name":"Agency Overflow Hunter","owns":"find agencies/consultancies already selling automation and needing fulfillment capacity"},
  {"name":"Contact Path Hunter","owns":"find a lawful public direct contact route for qualified buyers before falling back to marketplace-only channels"},
@@ -24,14 +25,35 @@ MONEY_LANES=[
  {"id":"documents","name":"Document Robot","price_min":149,"price_max":750,"target":"PDF, invoice, form, document processing","goal":"remove repetitive admin"},
  {"id":"agency-overflow","name":"Agency Overflow Fulfillment","price_min":500,"price_max":2500,"target":"agencies with existing paying clients","goal":"borrow distribution instead of finding every end buyer"},
  {"id":"maintenance","name":"Automation Maintenance","price_min":99,"price_max":500,"target":"ongoing monitoring/fixes","goal":"recurring revenue"},
+ {"id":"product","name":"GOX Money Hunter","price_min":49,"price_max":999,"target":"freelancers and small agencies needing opportunity-to-cash workflow","goal":"sell the asset as well as services"},
 ]
+
+HUMAN_GATES={
+ "personal_identity_verification",
+ "marketplace_login_or_2fa",
+ "accept_legal_terms_or_contract",
+ "link_bank_or_payout_account",
+ "authorize_spend",
+ "reveal_private_credentials",
+}
 
 def contract():
  return {
+  "mode":"AUTONOMOUS_BATCH_UNTIL_HUMAN_GATE",
   "team":TEAM,
   "money_lanes":MONEY_LANES,
   "scoreboard":["offers_sent","buyer_replies","accepted_orders","verified_collected_revenue"],
+  "human_gates":sorted(HUMAN_GATES),
+  "batch":{
+   "target_new_opportunities":20,
+   "target_qualified":8,
+   "target_operable_contacts":5,
+   "max_new_outbound_per_batch":3,
+   "max_followups_per_batch":3,
+   "stop_when":"verified payment collected or true external human gate blocks every live route"
+  },
   "rules":[
+   "Do not ask the owner to perform routine research, writing, routing, follow-up, or technical work.",
    "No internal build counts as sales progress.",
    "Prefer explicit existing demand over speculative prospecting.",
    "Prefer hours-old demand and operable direct contact paths.",
@@ -39,7 +61,8 @@ def contract():
    "Prefer a smaller paid trial that can be delivered quickly over a large vague proposal.",
    "Do not promise unverified capabilities.",
    "Follow up once when appropriate; respect declines and opt-outs.",
-   "After each sale/rejection, feed the result back into offer selection and capability verification.",
+   "After every batch, re-audit the full path and immediately attack the next failed stage.",
+   "Interrupt the owner only for HUMAN_GATES or a buyer decision that materially changes price/scope/contract.",
   ],
  }
 
