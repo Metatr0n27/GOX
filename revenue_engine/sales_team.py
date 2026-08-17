@@ -5,9 +5,11 @@ from __future__ import annotations
 TEAM=[
  {"name":"Fresh Cash Hunter","owns":"find explicit paid work posted recently, prioritize hours-old demand"},
  {"name":"Agency Overflow Hunter","owns":"find agencies/consultancies already selling automation and needing fulfillment capacity"},
+ {"name":"Contact Path Hunter","owns":"find a lawful public direct contact route for qualified buyers before falling back to marketplace-only channels"},
  {"name":"Offer Selector","owns":"choose the smallest credible paid offer GOX can verify and deliver"},
- {"name":"Closer","owns":"send or prepare buyer-specific proposals through an operable channel"},
- {"name":"Follow-up Captain","owns":"track sent offers, replies, and one concise follow-up when appropriate"},
+ {"name":"Closer","owns":"send buyer-specific proposals through an operable channel and record the sent event"},
+ {"name":"Reply Watch","owns":"monitor replies to sent proposals and surface meaningful buyer responses immediately"},
+ {"name":"Follow-up Captain","owns":"send one concise follow-up when appropriate and stop if the buyer declines or opts out"},
  {"name":"Order Intake","owns":"convert evidenced buyer acceptance into a scoped order and payment request"},
  {"name":"Delivery Pod","owns":"build the paid scope with the minimum specialists required"},
  {"name":"Acceptance QA","owns":"prove the deliverable meets agreed criteria before handoff"},
@@ -32,9 +34,11 @@ def contract():
   "rules":[
    "No internal build counts as sales progress.",
    "Prefer explicit existing demand over speculative prospecting.",
+   "Prefer hours-old demand and operable direct contact paths.",
+   "Try a lawful public direct contact route before declaring a marketplace login blocker.",
    "Prefer a smaller paid trial that can be delivered quickly over a large vague proposal.",
-   "Prioritize opportunities with an operable contact channel.",
    "Do not promise unverified capabilities.",
+   "Follow up once when appropriate; respect declines and opt-outs.",
    "After each sale/rejection, feed the result back into offer selection and capability verification.",
   ],
  }
