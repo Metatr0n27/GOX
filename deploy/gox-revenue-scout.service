@@ -1,0 +1,17 @@
+[Unit]
+Description=GOX Revenue Scout
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=gox
+Group=gox
+WorkingDirectory=/opt/gox-live/revenue_engine
+Environment=GOX_REVENUE_STATE=/var/lib/gox/revenue
+ExecStart=/usr/bin/python3 /opt/gox-live/revenue_engine/pipeline.py
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/gox/revenue
