@@ -3,7 +3,7 @@
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import base64,hmac,json,os,sqlite3,time,uuid,sys
 from pathlib import Path
-HOST=os.getenv("GOX_HOST","127.0.0.1");PORT=int(os.getenv("GOX_PORT","8080"));DATA_DIR=os.getenv("GOX_DATA_DIR",os.path.join(os.path.dirname(__file__),"data"));DB_PATH=os.path.join(DATA_DIR,"chat_dev.sqlite3");MAX_BODY=int(os.getenv("GOX_MAX_REQUEST_BYTES","16384"));STARTED=time.time();os.makedirs(DATA_DIR,exist_ok=True);AUTH_USER=os.getenv("GOX_AUTH_USER","gox");AUTH_PASSWORD=os.getenv("GOX_AUTH_PASSWORD","");DAILY_TARGET=float(os.getenv("GOX_DAILY_REVENUE_TARGET","500"));LOOPBACK={"127.0.0.1","localhost","::1"}
+HOST=os.getenv("GOX_HOST","127.0.0.1");PORT=int(os.getenv("GOX_PORT","8080"));DATA_DIR=os.getenv("GOX_DATA_DIR",os.path.join(os.path.dirname(__file__),"data"));DB_PATH=os.path.join(DATA_DIR,"chat_dev.sqlite3");MAX_BODY=int(os.getenv("GOX_MAX_REQUEST_BYTES","16384"));STARTED=time.time();os.makedirs(DATA_DIR,exist_ok=True);AUTH_USER=os.getenv("GOX_AUTH_USER","gox");AUTH_PASSWORD=os.getenv("GOX_AUTH_PASSWORD","");DAILY_TARGET=float(os.getenv("GOX_DAILY_REVENUE_TARGET","500"));LOOPBACK={"127.0.0.1","localhost","::1"};ALLOWED_KINDS={"plan","creator_plan"}
 if HOST not in LOOPBACK and not AUTH_PASSWORD:raise RuntimeError("Refusing non-loopback bind without GOX_AUTH_PASSWORD")
 ROOT=Path(__file__).resolve().parent.parent
 if str(ROOT/"revenue_engine") not in sys.path:sys.path.insert(0,str(ROOT/"revenue_engine"))
@@ -28,9 +28,9 @@ def init_db():
   for name,ddl in [('attempts','INTEGER NOT NULL DEFAULT 0'),('lease_until','REAL')]:
    if name not in cols:c.execute(f'ALTER TABLE jobs ADD COLUMN {name} {ddl}')
   c.execute("CREATE INDEX IF NOT EXISTS idx_jobs_status_created ON jobs(status,created_at)");init_revenue_schema(c)
-def create_job(message):
+def create_job(message,kind="plan"):
  jid=uuid.uuid4().hex[:12];now=time.time()
- with db() as c:c.execute("INSERT INTO jobs(id,message,created_at,updated_at) VALUES(?,?,?,?)",(jid,message,now,now))
+ with db() as c:c.execute("INSERT INTO jobs(id,message,kind,created_at,updated_at) VALUES(?,?,?,?,?)",(jid,message,kind,now,now))
  return jid
 def get_jobs(limit=25):
  with db() as c:rows=c.execute("SELECT id,message,kind,status,result,error,attempts,lease_until,created_at,updated_at FROM jobs ORDER BY created_at DESC LIMIT ?",(limit,)).fetchall()
@@ -68,7 +68,7 @@ class Handler(BaseHTTPRequestHandler):
   if public:return self.send_html(public)
   if not self.require_auth():return
   if path=='/api/status':
-   oq=read_queue();return self.send_json({'interface':'running','persistence':'running','job_queue':'running','agent_bridge':'allowlisted','auth':'enabled' if AUTH_PASSWORD else 'loopback-only','jobs':counts(),'opportunities':oq.get('count',0),'revenue':revenue_status(),'payment_readiness':payment_readiness()})
+   oq=read_queue();return self.send_json({'interface':'running','persistence':'running','job_queue':'running','agent_bridge':'allowlisted','allowed_job_kinds':sorted(ALLOWED_KINDS),'auth':'enabled' if AUTH_PASSWORD else 'loopback-only','jobs':counts(),'opportunities':oq.get('count',0),'revenue':revenue_status(),'payment_readiness':payment_readiness()})
   if path.startswith('/api/jobs'):return self.send_json({'jobs':get_jobs()})
   if path=='/api/opportunities':return self.send_json(read_queue())
   if path=='/api/capabilities':return self.send_json({'capabilities':capability_readiness()})
@@ -81,9 +81,17 @@ class Handler(BaseHTTPRequestHandler):
   try:n=int(self.headers.get('Content-Length','0'))
   except ValueError:return self.send_json({'error':'invalid content length'},400)
   if n<=0 or n>MAX_BODY:return self.send_json({'error':'request too large or empty'},413 if n>MAX_BODY else 400)
-  try:data=json.loads(self.rfile.read(n));message=str(data.get('message','')).strip()
+  try:data=json.loads(self.rfile.read(n))
   except Exception:return self.send_json({'error':'invalid json'},400)
-  if not message:return self.send_json({'error':'message required'},400)
-  jid=create_job(message);return self.send_json({'job_id':jid,'status':'queued','reply':f'Queued as {jid}.'},202)
+  kind=str(data.get('kind','plan')).strip()
+  if kind not in ALLOWED_KINDS:return self.send_json({'error':'unsupported job kind'},400)
+  if kind=='creator_plan':
+   payload=data.get('payload')
+   if not isinstance(payload,dict):return self.send_json({'error':'creator_plan payload object required'},400)
+   message=json.dumps(payload,separators=(',',':'))
+  else:
+   message=str(data.get('message','')).strip()
+   if not message:return self.send_json({'error':'message required'},400)
+  jid=create_job(message,kind);return self.send_json({'job_id':jid,'kind':kind,'status':'queued','reply':f'Queued as {jid}.'},202)
  def log_message(self,fmt,*args):pass
 if __name__=='__main__':print(f'GOX Chat Dev: http://{HOST}:{PORT}');ThreadingHTTPServer((HOST,PORT),Handler).serve_forever()
