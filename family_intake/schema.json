@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GOX Family Behavioral Profile",
+  "type": "object",
+  "required": ["schema_version", "profile_id", "display_name", "consent", "behavior", "goals", "examples"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "profile_id": {"type": "string", "minLength": 3},
+    "display_name": {"type": "string", "minLength": 1},
+    "relationship_label": {"type": "string"},
+    "consent": {
+      "type": "object",
+      "required": ["agreed", "share_with_family_system"],
+      "properties": {
+        "agreed": {"type": "boolean"},
+        "share_with_family_system": {"type": "boolean"},
+        "notes": {"type": "string"}
+      }
+    },
+    "behavior": {
+      "type": "object",
+      "required": ["decision_speed", "risk_tolerance", "structure_need", "directness", "social_energy", "change_tolerance", "conflict_style", "stress_response", "trust_style", "learning_style"],
+      "properties": {
+        "decision_speed": {"type": "integer", "minimum": 1, "maximum": 5},
+        "risk_tolerance": {"type": "integer", "minimum": 1, "maximum": 5},
+        "structure_need": {"type": "integer", "minimum": 1, "maximum": 5},
+        "directness": {"type": "integer", "minimum": 1, "maximum": 5},
+        "social_energy": {"type": "integer", "minimum": 1, "maximum": 5},
+        "change_tolerance": {"type": "integer", "minimum": 1, "maximum": 5},
+        "conflict_style": {"type": "string", "enum": ["avoid", "calm-discuss", "direct", "mediate", "compete", "mixed"]},
+        "stress_response": {"type": "string"},
+        "trust_style": {"type": "string"},
+        "learning_style": {"type": "string"},
+        "communication_preferences": {"type": "string"},
+        "motivators": {"type": "string"},
+        "friction_points": {"type": "string"}
+      }
+    },
+    "goals": {
+      "type": "object",
+      "required": ["top_priority", "what_help_should_do"],
+      "properties": {
+        "top_priority": {"type": "string"},
+        "what_help_should_do": {"type": "string"},
+        "what_help_should_not_do": {"type": "string"},
+        "skills_to_build": {"type": "string"},
+        "projects_or_income_goals": {"type": "string"}
+      }
+    },
+    "examples": {
+      "type": "object",
+      "required": ["when_things_go_well", "when_frustrated", "how_they_make_decisions"],
+      "properties": {
+        "when_things_go_well": {"type": "string"},
+        "when_frustrated": {"type": "string"},
+        "how_they_make_decisions": {"type": "string"},
+        "how_they_ask_for_help": {"type": "string"},
+        "what_makes_them_feel_respected": {"type": "string"},
+        "real_example": {"type": "string"}
+      }
+    },
+    "private_notes": {"type": "string"}
+  }
+}
