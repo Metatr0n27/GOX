@@ -45,7 +45,28 @@ for ACTION in "${ACTIONS[@]}"; do
 done
 git -C "$MAILBOX" add remote_steward/commands
 git -C "$MAILBOX" commit -m "queue pre-dollar readiness proofs $STAMP" >/dev/null
-GIT_TERMINAL_PROMPT=0 git -C "$MAILBOX" push origin "HEAD:$BRANCH" >/dev/null
+
+# The steward may push a result between our fetch and push. Rebase and retry instead of failing.
+PUSHED=0
+for ATTEMPT in 1 2 3 4 5; do
+  if GIT_TERMINAL_PROMPT=0 git -C "$MAILBOX" push origin "HEAD:$BRANCH" >/tmp/gox-pre-dollar-push.log 2>&1; then
+    PUSHED=1
+    break
+  fi
+  GIT_TERMINAL_PROMPT=0 git -C "$MAILBOX" fetch origin "$BRANCH" >/dev/null 2>&1 || true
+  if ! git -C "$MAILBOX" rebase "origin/$BRANCH" >/tmp/gox-pre-dollar-rebase.log 2>&1; then
+    git -C "$MAILBOX" rebase --abort || true
+    cat /tmp/gox-pre-dollar-rebase.log || true
+    fail proof_queue_rebase_failed
+  fi
+  sleep 2
+done
+if [ "$PUSHED" -ne 1 ]; then
+  cat /tmp/gox-pre-dollar-push.log || true
+  fail proof_queue_push_race
+fi
+
+echo "PASS proof_queue_push"
 
 log "WAIT FOR AUTOMATIC RESULTS"
 DEADLINE=$((SECONDS+240))
