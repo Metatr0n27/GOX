@@ -1,0 +1,18 @@
+{
+  "id": "20260820-072752-approval_health",
+  "action": "approval_health",
+  "started_at": "2026-08-20T07:28:20.542072+00:00",
+  "status": "complete",
+  "runs": [
+    {
+      "cmd": [
+        "bash",
+        "-lc",
+        "systemctl is-active gox-approval-bridge && curl -fsS http://127.0.0.1:8765/health"
+      ],
+      "exit_code": 0,
+      "output": "active\n{\"status\": \"ok\", \"pending\": 0}"
+    }
+  ],
+  "finished_at": "2026-08-20T07:28:20.554826+00:00"
+}
