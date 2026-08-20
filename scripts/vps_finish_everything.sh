@@ -31,8 +31,12 @@ if ! gh auth status >/dev/null 2>&1; then
   gh auth login --hostname github.com --git-protocol https --web
 fi
 gh auth status >/dev/null 2>&1 || { block "github_auth_not_persisted"; exit 3; }
-gh auth setup-git
-git config --global credential.helper ""
+
+# Normalize all old/broken credential helper entries before asking gh to configure Git.
+git config --global --unset-all credential.helper 2>/dev/null || true
+git config --system --unset-all credential.helper 2>/dev/null || true
+gh auth setup-git >/dev/null 2>&1 || true
+git config --global --unset-all credential.helper 2>/dev/null || true
 git config --global --add credential.helper "!gh auth git-credential"
 pass "github_auth"
 
