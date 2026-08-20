@@ -1,0 +1,18 @@
+{
+  "id": "20260820-065626-core_state_tests",
+  "action": "core_state_tests",
+  "started_at": "2026-08-20T06:57:04.670197+00:00",
+  "status": "complete",
+  "runs": [
+    {
+      "cmd": [
+        "bash",
+        "-lc",
+        "cd /var/lib/gox-steward/mailbox && PYTHONPATH=. python3 -m unittest core.test_identity_revenue_state core.test_recovery -v"
+      ],
+      "exit_code": 0,
+      "output": "\nSTDERR:\ntest_identity_separation_and_verified_money (core.test_identity_revenue_state.StateTests.test_identity_separation_and_verified_money) ... ok\ntest_probability_bounds (core.test_identity_revenue_state.StateTests.test_probability_bounds) ... ok\ntest_verified_paid_requires_evidence (core.test_identity_revenue_state.StateTests.test_verified_paid_requires_evidence) ... ok\ntest_claim_and_complete (core.test_recovery.RecoveryTests.test_claim_and_complete) ... ok\ntest_consequential_requires_idempotency (core.test_recovery.RecoveryTests.test_consequential_requires_idempotency) ... ok\ntest_stale_consequential_blocks (core.test_recovery.RecoveryTests.test_stale_consequential_blocks) ... ok\ntest_stale_nonconsequential_requeues (core.test_recovery.RecoveryTests.test_stale_nonconsequential_requeues) ... ok\n\n----------------------------------------------------------------------\nRan 7 tests in 0.107s\n\nOK\n"
+    }
+  ],
+  "finished_at": "2026-08-20T06:57:04.831858+00:00"
+}
