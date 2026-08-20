@@ -1,0 +1,18 @@
+{
+  "id": "20260819-2119-bridge-finisher",
+  "action": "bridge_finisher",
+  "started_at": "2026-08-20T06:16:14.167270+00:00",
+  "status": "failed",
+  "runs": [
+    {
+      "cmd": [
+        "bash",
+        "-lc",
+        "cd /root/GOX-bridge && timeout 600s bash scripts/finish_execution_bridge.sh"
+      ],
+      "exit_code": 1,
+      "output": "\n=== GOX ONE-SHOT EXECUTION BRIDGE FINISHER ===\ntimestamp=2026-08-20T06:16:14Z\n\n=== OS + RUNTIME ===\nPRETTY_NAME=\"Ubuntu 24.04.4 LTS\"\nNAME=\"Ubuntu\"\nVERSION_ID=\"24.04\"\nVERSION=\"24.04.4 LTS (Noble Numbat)\"\nVERSION_CODENAME=noble\nID=ubuntu\nID_LIKE=debian\nHOME_URL=\"https://www.ubuntu.com/\"\nSUPPORT_URL=\"https://help.ubuntu.com/\"\nBUG_REPORT_URL=\"https://bugs.launchpad.net/ubuntu/\"\nPRIVACY_POLICY_URL=\"https://www.ubuntu.com/legal/terms-and-policies/privacy-policy\"\nUBUNTU_CODENAME=noble\nLOGO=ubuntu-logo\ngit=/usr/bin/git\ngit version 2.43.0\npython3=/usr/bin/python3\nPython 3.12.3\nherdr=/root/.local/bin/herdr\nherdr 0.8.2\nclaude=/root/.hermes/node/bin/claude\n2.1.212 (Claude Code)\ntimeout=/usr/bin/timeout\ntimeout (GNU coreutils) 9.4\nCopyright (C) 2023 Free Software Foundation, Inc.\n\n=== SYNC CLEAN BRIDGE CLONE ===\nFrom https://github.com/Metatr0n27/GOX\n * branch            gox/execution-bridge-v1 -> FETCH_HEAD\nAlready on 'gox/execution-bridge-v1'\nYour branch is up to date with 'origin/gox/execution-bridge-v1'.\nHEAD is now at e7b9cab Make execution finisher timeout-safe and restart-resilient\ncommit=e7b9cabdaec9593d4627c6be302145441c9495d2\n\n=== PYTHON TESTS ===\ntest_canonical_prompt_includes_context_and_done (execution_bridge.test_bridge.BridgeTests.test_canonical_prompt_includes_context_and_done) ... ok\ntest_canonical_prompt_requires_core_fields (execution_bridge.test_bridge.BridgeTests.test_canonical_prompt_requires_core_fields) ... ok\ntest_render_command_substitutes_prompt_file (execution_bridge.test_bridge.BridgeTests.test_render_command_substitutes_prompt_file) ... ok\ntest_stable_id_is_repeatable (execution_bridge.test_bridge.BridgeTests.test_stable_id_is_repeatable) ... ok\ntest_write_json_is_readable (execution_bridge.test_bridge.BridgeTests.test_write_json_is_readable) ... ok\n\n----------------------------------------------------------------------\nRan 5 tests in 0.001s\n\nOK\n\n=== CLAUDE NONINTERACTIVE SMOKE ===\nExecution error\nclaude_smoke_exit=124\nGOX_BLOCKER=claude_timeout_auth_or_network\nreport=/root/gox-bootstrap-report/finish-20260820-061614.log\n"
+    }
+  ],
+  "finished_at": "2026-08-20T06:17:15.199650+00:00"
+}
