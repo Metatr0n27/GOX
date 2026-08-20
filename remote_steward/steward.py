@@ -30,7 +30,9 @@ ALLOWED = {
     "core_state_tests": [["bash", "-lc", "cd /var/lib/gox-steward/mailbox && PYTHONPATH=. python3 -m unittest core.test_identity_revenue_state core.test_recovery -v"]],
     "secret_guard": [["bash", "-lc", "cd /var/lib/gox-steward/mailbox && python3 security/secret_guard.py ."]],
     "gap_scan": [["bash", "-lc", "cd /var/lib/gox-steward/mailbox && python3 quality/gap_scanner.py"]],
-    "approval_health": [["bash", "-lc", "curl -fsS http://127.0.0.1:8765/health"]],
+    "approval_health": [["bash", "-lc", "systemctl is-active gox-approval-bridge && curl -fsS http://127.0.0.1:8765/health"]],
+    "chief_of_staff_snapshot": [["bash", "-lc", "cd /var/lib/gox-steward/mailbox && python3 core/chief_of_staff.py"]],
+    "chatdev_smoke": [["bash", "-lc", "cd /var/lib/gox-steward/mailbox && test -s chatdev/index.html && test -s chatdev/server.py && python3 -m py_compile chatdev/server.py"]],
     "steward_self_test": [["bash", "-lc", "systemctl is-active gox-remote-steward; git -C /var/lib/gox-steward/mailbox status --short --branch; gh auth status >/dev/null && echo github_auth=ok"]],
 }
 
@@ -76,13 +78,7 @@ def run(cmd: list[str]) -> dict:
 
 
 def git(*args: str, check: bool = True):
-    return subprocess.run(
-        ["git", "-C", str(MAILBOX), *args],
-        text=True,
-        capture_output=True,
-        check=check,
-        env=child_env(),
-    )
+    return subprocess.run(["git", "-C", str(MAILBOX), *args], text=True, capture_output=True, check=check, env=child_env())
 
 
 def load_state() -> dict:
@@ -108,7 +104,6 @@ def sync_mailbox() -> None:
     if fetch.returncode != 0:
         raise RuntimeError("git fetch failed: " + redact(fetch.stderr or fetch.stdout)[-2000:])
     git("checkout", BRANCH)
-    # Never destroy a locally committed result. Rebase local commits over remote instead.
     rebase = git("rebase", f"origin/{BRANCH}", check=False)
     if rebase.returncode != 0:
         git("rebase", "--abort", check=False)
@@ -122,7 +117,6 @@ def push_result(path: Path) -> None:
     combined = (commit.stdout or "") + (commit.stderr or "")
     if commit.returncode != 0 and "nothing to commit" not in combined.lower():
         raise RuntimeError("git commit failed: " + redact(combined)[-2000:])
-
     for attempt in range(3):
         p = git("push", "origin", f"HEAD:{BRANCH}", check=False)
         if p.returncode == 0:
@@ -136,6 +130,7 @@ def push_result(path: Path) -> None:
         if rebase.returncode != 0:
             git("rebase", "--abort", check=False)
             continue
+        time.sleep(1 + attempt)
     raise RuntimeError("git push failed: " + redact(p.stderr or p.stdout)[-2000:])
 
 
@@ -145,7 +140,6 @@ def process_one(path: Path, state: dict) -> None:
     action = req.get("action")
     if command_id in state["processed"]:
         return
-
     result = {"id": command_id, "action": action, "started_at": now(), "status": "rejected", "runs": []}
     try:
         if action not in ALLOWED:
@@ -158,13 +152,10 @@ def process_one(path: Path, state: dict) -> None:
     except Exception as exc:
         result["status"] = "failed"
         result["error"] = redact(str(exc))
-
     result["finished_at"] = now()
     RESULTS.mkdir(parents=True, exist_ok=True)
     out = RESULTS / f"{command_id}.json"
     out.write_text(json.dumps(result, indent=2))
-
-    # Only mark processed after the result is safely pushed to GitHub.
     push_result(out)
     state["processed"].append(command_id)
     state["processed"] = state["processed"][-1000:]
@@ -179,7 +170,6 @@ def main() -> None:
         fcntl.flock(lock_fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
     except BlockingIOError:
         raise SystemExit("another steward instance is already running")
-
     write_log("steward starting")
     state = load_state()
     while True:
