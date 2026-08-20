@@ -1,0 +1,18 @@
+{
+  "id": "20260820-065626-bridge_tests",
+  "action": "bridge_tests",
+  "started_at": "2026-08-20T06:56:58.456647+00:00",
+  "status": "complete",
+  "runs": [
+    {
+      "cmd": [
+        "bash",
+        "-lc",
+        "cd /root/GOX-bridge && PYTHONPATH=/root/GOX-bridge python3 -m unittest execution_bridge.test_bridge -v"
+      ],
+      "exit_code": 0,
+      "output": "\nSTDERR:\ntest_canonical_prompt_includes_context_and_done (execution_bridge.test_bridge.BridgeTests.test_canonical_prompt_includes_context_and_done) ... ok\ntest_canonical_prompt_requires_core_fields (execution_bridge.test_bridge.BridgeTests.test_canonical_prompt_requires_core_fields) ... ok\ntest_render_command_substitutes_prompt_file (execution_bridge.test_bridge.BridgeTests.test_render_command_substitutes_prompt_file) ... ok\ntest_stable_id_is_repeatable (execution_bridge.test_bridge.BridgeTests.test_stable_id_is_repeatable) ... ok\ntest_write_json_is_readable (execution_bridge.test_bridge.BridgeTests.test_write_json_is_readable) ... ok\n\n----------------------------------------------------------------------\nRan 5 tests in 0.001s\n\nOK\n"
+    }
+  ],
+  "finished_at": "2026-08-20T06:56:58.511666+00:00"
+}
