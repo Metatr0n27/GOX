@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>GOX Owner Wake Companion</title>
+<style>
+body{font-family:system-ui;margin:0;background:#111;color:#fff;min-height:100vh;display:flex;align-items:center;justify-content:center}.card{max-width:720px;padding:28px}.state{font-size:14px;opacity:.75}.title{font-size:32px;font-weight:700;margin:12px 0}.detail{font-size:20px;line-height:1.45;white-space:pre-wrap}.heard{margin-top:20px;padding:14px;border:1px solid #555;border-radius:14px}.urgent{animation:pulse 1s infinite}@keyframes pulse{50%{opacity:.55}}</style>
+</head>
+<body><main class="card"><div id="state" class="state">WAITING FOR GOX</div><div id="title" class="title">No owner gate.</div><div id="detail" class="detail">GOX will stay quiet until it actually needs you.</div><div id="heard" class="heard">Voice: standby</div></main>
+<script>
+const q=new URLSearchParams(location.search);const token=q.get('token')||'';
+let active=null,alarmTimer=null,recognition=null,listening=false;
+const S=id=>document.getElementById(id);
+function speak(text){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.rate=.95;speechSynthesis.speak(u)}catch(e){}}
+function alarm(){if(!active)return;document.body.classList.add('urgent');speak('Hey Ron, where are you? I need your help. Say, this is Ron, I am ready to approve.');}
+function startAlarm(){if(alarmTimer)return;alarm();alarmTimer=setInterval(alarm,20000)}
+function stopAlarm(){if(alarmTimer){clearInterval(alarmTimer);alarmTimer=null}document.body.classList.remove('urgent');speechSynthesis.cancel()}
+async function approvals(){const r=await fetch('/api/approvals?token='+encodeURIComponent(token));if(!r.ok)throw new Error('approval authorization required');return await r.json()}
+async function decide(id,decision){const r=await fetch('/api/approvals/'+encodeURIComponent(id)+'/decision?token='+encodeURIComponent(token),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({decision})});if(!r.ok)throw new Error('decision failed');return await r.json()}
+function render(a){active=a||null;if(!a){stopAlarm();S('state').textContent='WAITING FOR GOX';S('title').textContent='No owner gate.';S('detail').textContent='GOX will stay quiet until it actually needs you.';return}S('state').textContent='OWNER ACTION REQUIRED';S('title').textContent=a.title||'GOX needs approval';S('detail').textContent=[a.reason&&('Why: '+a.reason),a.site&&('Site: '+a.site),a.action&&('Action: '+a.action)].filter(Boolean).join('\n');startAlarm()}
+async function poll(){try{const a=await approvals();render(a&&a.length?a[0]:null)}catch(e){S('state').textContent='CONNECTION ISSUE';S('detail').textContent=e.message}}
+function handleVoice(t){const x=t.toLowerCase();S('heard').textContent='Heard: '+t;if(x.includes('this is ron')&&(x.includes('ready to approve')||x.includes('ready to work'))){stopAlarm();speak('Okay. I am showing you what needs your attention.');S('state').textContent='RON ACKNOWLEDGED';return}if(!active)return;if(x.includes('approve')){decide(active.id,'approve').then(()=>{speak('Approved. GOX will resume.');active=null;poll()}).catch(e=>speak('I could not approve that. '+e.message));return}if(x.includes('deny')){decide(active.id,'deny').then(()=>{speak('Denied. GOX will not continue that action.');active=null;poll()}).catch(e=>speak('I could not deny that. '+e.message));return}if(x.includes('open')&&active.url){location.href=active.url;return}if(x.includes('explain')){speak((active.title||'Approval needed')+'. '+(active.reason||'GOX needs your authorization.'));return}}
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(SR){recognition=new SR();recognition.lang='en-US';recognition.continuous=true;recognition.interimResults=false;recognition.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)handleVoice(e.results[i][0].transcript)}};recognition.onend=()=>{listening=false;setTimeout(startListening,750)};recognition.onerror=()=>{};function startListening(){if(listening)return;try{recognition.start();listening=true;S('heard').textContent='Voice: listening'}catch(e){}}startListening()}else{S('heard').textContent='Voice recognition is not supported by this browser.'}
+setInterval(poll,5000);poll();
+</script></body></html>
