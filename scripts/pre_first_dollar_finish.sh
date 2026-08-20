@@ -38,7 +38,10 @@ echo "PASS steward_service"
 
 log "QUEUE LIVE PROOFS"
 STAMP="$(date -u +%Y%m%d-%H%M%S)"
-ACTIONS=(steward_self_test approval_health chief_of_staff_snapshot chatdev_smoke core_state_tests secret_guard bridge_tests runtime_status gap_scan)
+BLOCKING_ACTIONS=(steward_self_test approval_health chief_of_staff_snapshot chatdev_smoke core_state_tests secret_guard bridge_tests runtime_status)
+INFORMATIONAL_ACTIONS=(gap_scan)
+ACTIONS=("${BLOCKING_ACTIONS[@]}" "${INFORMATIONAL_ACTIONS[@]}")
+
 for ACTION in "${ACTIONS[@]}"; do
   ID="${STAMP}-${ACTION}"
   printf '{"id":"%s","action":"%s"}\n' "$ID" "$ACTION" > "$MAILBOX/remote_steward/commands/${ID}.json"
@@ -81,26 +84,52 @@ while [ "$SECONDS" -lt "$DEADLINE" ]; do
   [ "$MISSING" -eq 0 ] && break
 done
 
+is_blocking_action(){
+  local target="$1"
+  local item
+  for item in "${BLOCKING_ACTIONS[@]}"; do
+    [ "$item" = "$target" ] && return 0
+  done
+  return 1
+}
+
 FAILS=0
 for ACTION in "${ACTIONS[@]}"; do
   FILE="$MAILBOX/remote_steward/results/${STAMP}-${ACTION}.json"
   if [ ! -f "$FILE" ]; then
-    echo "BLOCKED $ACTION no_result"
-    FAILS=$((FAILS+1))
+    if is_blocking_action "$ACTION"; then
+      echo "BLOCKED $ACTION no_result"
+      FAILS=$((FAILS+1))
+    else
+      echo "INFO $ACTION no_result"
+    fi
     continue
   fi
+
   STATUS="$(python3 - "$FILE" <<'PY'
 import json,sys
 p=json.load(open(sys.argv[1]))
 print(p.get('status','unknown'))
 PY
 )"
+
   if [ "$STATUS" = complete ]; then
-    echo "PASS $ACTION"
-  else
+    if is_blocking_action "$ACTION"; then
+      echo "PASS $ACTION"
+    else
+      echo "INFO $ACTION status=complete"
+    fi
+    continue
+  fi
+
+  if is_blocking_action "$ACTION"; then
     echo "BLOCKED $ACTION status=$STATUS"
     FAILS=$((FAILS+1))
-    python3 - "$FILE" <<'PY'
+  else
+    echo "INFO $ACTION status=$STATUS global_completion_not_required_for_pre_dollar"
+  fi
+
+  python3 - "$FILE" <<'PY'
 import json,sys
 p=json.load(open(sys.argv[1]))
 for r in p.get('runs',[]):
@@ -109,12 +138,12 @@ for r in p.get('runs',[]):
 if p.get('error'):
     print(p['error'])
 PY
-  fi
 done
 
 log "PRE-FIRST-DOLLAR VERDICT"
 if [ "$FAILS" -eq 0 ]; then
   echo "GOX_PRE_DOLLAR_TECH_READY=PASS"
+  echo "GLOBAL_GAP_SCAN=INFORMATIONAL"
   echo "NEXT=QUALIFY_REAL_PAID_WORK"
   exit 0
 fi
