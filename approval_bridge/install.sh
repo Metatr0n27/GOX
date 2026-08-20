@@ -5,6 +5,7 @@ APP=/opt/gox-approval-bridge
 ROOT=/var/lib/gox-approval
 SERVICE=/etc/systemd/system/gox-approval-bridge.service
 LOCAL_SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/server.py"
+PORT=8765
 
 fail(){ echo "GOX_APPROVAL_BLOCKER=$1"; exit 1; }
 [ "$(id -u)" -eq 0 ] || fail root_required
@@ -39,6 +40,16 @@ ReadWritePaths=/var/lib/gox-approval
 [Install]
 WantedBy=multi-user.target
 UNIT
+
+# Stop the managed unit first, then clear any orphan process still holding the port.
+systemctl stop gox-approval-bridge 2>/dev/null || true
+if command -v fuser >/dev/null 2>&1; then
+  fuser -k "${PORT}/tcp" >/dev/null 2>&1 || true
+elif command -v ss >/dev/null 2>&1; then
+  PIDS="$(ss -ltnp "sport = :${PORT}" 2>/dev/null | sed -n 's/.*pid=\([0-9][0-9]*\).*/\1/p' | sort -u)"
+  [ -z "$PIDS" ] || kill $PIDS 2>/dev/null || true
+fi
+sleep 1
 
 systemctl daemon-reload
 systemctl enable gox-approval-bridge >/dev/null
