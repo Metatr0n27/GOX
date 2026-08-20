@@ -1,0 +1,18 @@
+{
+  "id": "20260820-065658-chatdev_smoke",
+  "action": "chatdev_smoke",
+  "started_at": "2026-08-20T06:57:49.564195+00:00",
+  "status": "complete",
+  "runs": [
+    {
+      "cmd": [
+        "bash",
+        "-lc",
+        "cd /var/lib/gox-steward/mailbox && test -s chatdev/index.html && test -s chatdev/server.py && python3 -m py_compile chatdev/server.py"
+      ],
+      "exit_code": 0,
+      "output": ""
+    }
+  ],
+  "finished_at": "2026-08-20T06:57:49.594968+00:00"
+}
