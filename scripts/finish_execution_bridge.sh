@@ -7,6 +7,7 @@ REPO="https://github.com/Metatr0n27/GOX.git"
 REPORT_DIR="/root/gox-bootstrap-report"
 mkdir -p "$REPORT_DIR"
 REPORT="$REPORT_DIR/finish-$(date +%Y%m%d-%H%M%S).log"
+ln -sfn "$REPORT" "$REPORT_DIR/latest.log"
 exec > >(tee "$REPORT") 2>&1
 
 say(){ printf '\n=== %s ===\n' "$1"; }
@@ -17,7 +18,7 @@ echo "timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
 say "OS + RUNTIME"
 [ -f /etc/os-release ] && cat /etc/os-release || true
-for x in git python3 herdr claude; do
+for x in git python3 herdr claude timeout; do
   if command -v "$x" >/dev/null 2>&1; then
     echo "$x=$(command -v "$x")"
     "$x" --version 2>/dev/null | head -n 2 || true
@@ -28,6 +29,7 @@ done
 command -v git >/dev/null 2>&1 || fail "git_missing"
 command -v python3 >/dev/null 2>&1 || fail "python3_missing"
 command -v claude >/dev/null 2>&1 || fail "claude_missing"
+command -v timeout >/dev/null 2>&1 || fail "timeout_missing"
 
 say "SYNC CLEAN BRIDGE CLONE"
 if [ ! -d "$DIR/.git" ]; then
@@ -45,11 +47,14 @@ PYTHONPATH="$DIR" python3 -m unittest execution_bridge.test_bridge -v
 
 say "CLAUDE NONINTERACTIVE SMOKE"
 set +e
-SMOKE="$(printf 'Reply with exactly GOX_RUNTIME_OK and nothing else.' | claude -p --max-turns 1 2>&1)"
+SMOKE="$(timeout 60s claude -p --max-turns 1 'Reply with exactly GOX_RUNTIME_OK and nothing else.' 2>&1)"
 SMOKE_CODE=$?
 set -e
 echo "$SMOKE"
 echo "claude_smoke_exit=$SMOKE_CODE"
+if [ "$SMOKE_CODE" -eq 124 ]; then
+  fail "claude_timeout_auth_or_network"
+fi
 [ "$SMOKE_CODE" -eq 0 ] || fail "claude_noninteractive_failed"
 echo "$SMOKE" | grep -q "GOX_RUNTIME_OK" || fail "claude_unexpected_smoke_output"
 
@@ -97,7 +102,7 @@ say "REAL 3-AGENT SAFE ENSEMBLE"
 python3 execution_bridge/bridge.py /tmp/gox_bridge_smoke_job.json --config execution_bridge/config.json --ensemble 3
 
 say "VERIFY OUTPUTS"
-LATEST="$(find .gox/runs -type f -name 'synthesis*.json' -o -name 'status.json' 2>/dev/null | xargs -r ls -1t | head -n 1 || true)"
+LATEST="$(find .gox/runs -type f \( -name 'synthesis*.json' -o -name 'status.json' \) 2>/dev/null | xargs -r ls -1t | head -n 1 || true)"
 find .gox/runs -maxdepth 4 -type f 2>/dev/null | tail -n 30 || true
 [ -n "$LATEST" ] || fail "no_persistent_run_evidence"
 echo "latest_evidence=$LATEST"
