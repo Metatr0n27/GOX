@@ -1,0 +1,28 @@
+name: execution-bridge
+
+on:
+  push:
+    paths:
+      - 'execution_bridge/**'
+      - '.github/workflows/execution-bridge.yml'
+  pull_request:
+    paths:
+      - 'execution_bridge/**'
+      - '.github/workflows/execution-bridge.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Unit tests
+        run: |
+          cd execution_bridge
+          python -m unittest -v test_bridge.py
+      - name: Dry-run bridge
+        run: |
+          cp execution_bridge/config.example.json execution_bridge/config.json
+          python execution_bridge/bridge.py execution_bridge/job.example.json --dry-run
