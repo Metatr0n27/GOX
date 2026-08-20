@@ -22,6 +22,8 @@ ALLOWED = {
     "bridge_probe": [["bash", "-lc", "cd /root/GOX-bridge && python3 execution_bridge/bridge.py /tmp/gox_bridge_smoke_job.json --config execution_bridge/config.json --probe"]],
     "git_status_bridge": [["bash", "-lc", "cd /root/GOX-bridge && git status --short --branch"]],
     "latest_bootstrap_log": [["bash", "-lc", "tail -n 200 /root/gox-bootstrap-report/latest.log 2>/dev/null || true"]],
+    "core_state_tests": [["bash", "-lc", "cd /var/lib/gox-steward/mailbox && PYTHONPATH=. python3 -m unittest core.test_identity_revenue_state core.test_recovery -v"]],
+    "secret_guard": [["bash", "-lc", "cd /var/lib/gox-steward/mailbox && python3 security/secret_guard.py ."]],
 }
 
 REDACT_KEYS = ("token", "secret", "password", "authorization", "cookie", "api_key", "apikey")
@@ -31,12 +33,17 @@ def now():
     return datetime.now(timezone.utc).isoformat()
 
 
+def redact(text):
+    text = text or ""
+    for key in REDACT_KEYS:
+        text = text.replace(key.upper(), "[REDACTED_KEY]").replace(key, "[REDACTED_KEY]")
+    return text
+
+
 def run(cmd):
     p = subprocess.run(cmd, text=True, capture_output=True, timeout=620)
     text = (p.stdout or "") + ("\nSTDERR:\n" + p.stderr if p.stderr else "")
-    for key in REDACT_KEYS:
-        text = text.replace(key.upper(), "[REDACTED_KEY]").replace(key, "[REDACTED_KEY]")
-    return {"cmd": cmd, "exit_code": p.returncode, "output": text[-30000:]}
+    return {"cmd": cmd, "exit_code": p.returncode, "output": redact(text)[-30000:]}
 
 
 def git(*args, check=True):
@@ -45,13 +52,18 @@ def git(*args, check=True):
 
 def load_state():
     if STATE.exists():
-        return json.loads(STATE.read_text())
+        try:
+            return json.loads(STATE.read_text())
+        except Exception:
+            pass
     return {"processed": []}
 
 
 def save_state(state):
     STATE.parent.mkdir(parents=True, exist_ok=True)
-    STATE.write_text(json.dumps(state, indent=2))
+    tmp = STATE.with_suffix(".tmp")
+    tmp.write_text(json.dumps(state, indent=2))
+    os.replace(tmp, STATE)
 
 
 def sync_mailbox():
@@ -61,11 +73,21 @@ def sync_mailbox():
 
 
 def push_result(path):
-    git("add", str(path.relative_to(MAILBOX)))
-    git("commit", "-m", f"steward result {path.stem}")
-    p = git("push", "origin", BRANCH, check=False)
-    if p.returncode != 0:
-        raise RuntimeError("git push failed: " + (p.stderr or p.stdout)[-2000:])
+    rel = str(path.relative_to(MAILBOX))
+    git("add", rel)
+    commit = git("commit", "-m", f"steward result {path.stem}", check=False)
+    if commit.returncode != 0 and "nothing to commit" not in (commit.stdout + commit.stderr).lower():
+        raise RuntimeError("git commit failed: " + redact(commit.stderr or commit.stdout)[-2000:])
+    for attempt in range(2):
+        p = git("push", "origin", BRANCH, check=False)
+        if p.returncode == 0:
+            return
+        if attempt == 0:
+            fetch = git("fetch", "origin", BRANCH, check=False)
+            rebase = git("rebase", f"origin/{BRANCH}", check=False)
+            if fetch.returncode != 0 or rebase.returncode != 0:
+                break
+    raise RuntimeError("git push failed: " + redact(p.stderr or p.stdout)[-2000:])
 
 
 def process_one(path, state):
@@ -85,7 +107,7 @@ def process_one(path, state):
             result["status"] = "complete" if all(x["exit_code"] == 0 for x in result["runs"]) else "failed"
     except Exception as e:
         result["status"] = "failed"
-        result["error"] = str(e)
+        result["error"] = redact(str(e))
     result["finished_at"] = now()
     RESULTS.mkdir(parents=True, exist_ok=True)
     out = RESULTS / f"{command_id}.json"
@@ -105,7 +127,7 @@ def main():
             for path in sorted(COMMANDS.glob("*.json")):
                 process_one(path, state)
         except Exception as e:
-            (ROOT / "last_error.txt").write_text(f"{now()} {e}\n")
+            (ROOT / "last_error.txt").write_text(f"{now()} {redact(str(e))}\n")
         time.sleep(POLL_SECONDS)
 
 
