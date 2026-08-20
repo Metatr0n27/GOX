@@ -1,0 +1,18 @@
+{
+  "id": "20260820-062021-steward-self-test",
+  "action": "steward_self_test",
+  "started_at": "2026-08-20T06:20:24.929192+00:00",
+  "status": "complete",
+  "runs": [
+    {
+      "cmd": [
+        "bash",
+        "-lc",
+        "systemctl is-active gox-remote-steward; git -C /var/lib/gox-steward/mailbox status --short --branch; gh auth status >/dev/null && echo github_auth=ok"
+      ],
+      "exit_code": 0,
+      "output": "active\n## gox/remote-steward...origin/gox/remote-steward\ngithub_auth=ok\n"
+    }
+  ],
+  "finished_at": "2026-08-20T06:20:25.336903+00:00"
+}
