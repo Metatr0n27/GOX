@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "release_rule": "GOX is not complete while any critical check is blocked or unverified.",
+  "critical": [
+    {"id":"owner_voice","label":"Voice wake and owner acknowledgement","evidence":["approval_bridge/owner_wake_companion.html"]},
+    {"id":"approval_bridge","label":"Approval bridge persistence and secure owner/internal auth","evidence":["approval_bridge/server.py"]},
+    {"id":"steward_return","label":"Remote Steward command/result round trip","evidence":["remote_steward/steward.py","remote_steward/results"]},
+    {"id":"runtime","label":"Real noninteractive agent runtime","evidence":["execution_bridge","remote_steward/results"]},
+    {"id":"chatdev","label":"Visible PM/Dev/Tester/Reviewer cockpit","evidence":["chatdev"]},
+    {"id":"family_lanes","label":"Identity-separated family lanes","evidence":["core/tedium_absorber.py","family_intake"]},
+    {"id":"easy_jobs","label":"Qualified legitimate job/task pipeline","evidence":["revenue"]},
+    {"id":"revenue_ledger","label":"Earned and expected revenue tracked separately","evidence":["core/tedium_absorber.py"]},
+    {"id":"restart_recovery","label":"Restart-safe state and idempotency","evidence":["core/tedium_absorber.py"]},
+    {"id":"secrets","label":"Secrets excluded/redacted/rotatable","evidence":["quality","remote_steward/steward.py"]},
+    {"id":"first_dollar","label":"Verified accepted/paid task with evidence","evidence":["revenue/first_dollar_paper_stack.md"]}
+  ]
+}
