@@ -25,6 +25,9 @@ gh auth setup-git >/dev/null 2>&1 || true
 git config --global --unset-all credential.helper 2>/dev/null || true
 git config --global --add credential.helper "!gh auth git-credential"
 
+log "STOP OLD STEWARD"
+systemctl stop gox-remote-steward 2>/dev/null || true
+
 log "BACKUP"
 mkdir -p /root/gox-steward-backups
 if [ -d "$APP" ] || [ -d "$ROOT" ]; then
@@ -87,28 +90,28 @@ ReadWritePaths=/var/lib/gox-steward /root/GOX-bridge /root/gox-bootstrap-report 
 [Install]
 WantedBy=multi-user.target
 UNIT
-
 systemctl daemon-reload
 systemctl enable gox-remote-steward >/dev/null
+
+log "QUEUE SELF TEST BEFORE START"
+STAMP="$(date -u +%Y%m%d-%H%M%S)"
+CMD_REL="remote_steward/commands/${STAMP}-steward-self-test.json"
+CMD="$MAILBOX/$CMD_REL"
+printf '{"id":"%s-steward-self-test","action":"steward_self_test"}\n' "$STAMP" > "$CMD"
+git -C "$MAILBOX" add "$CMD_REL"
+git -C "$MAILBOX" commit -m "queue steward self test $STAMP" >/dev/null
+GIT_TERMINAL_PROMPT=0 git -C "$MAILBOX" push origin "HEAD:$BRANCH" >/dev/null
+
+log "START STEWARD"
 systemctl restart gox-remote-steward
 sleep 3
 systemctl is-active --quiet gox-remote-steward || fail "service_not_active"
 
-log "QUEUE SELF TEST"
-STAMP="$(date -u +%Y%m%d-%H%M%S)"
-CMD="$MAILBOX/remote_steward/commands/${STAMP}-steward-self-test.json"
-printf '{"id":"%s-steward-self-test","action":"steward_self_test"}\n' "$STAMP" > "$CMD"
-git -C "$MAILBOX" add "$CMD"
-git -C "$MAILBOX" commit -m "queue steward self test $STAMP" >/dev/null
-GIT_TERMINAL_PROMPT=0 git -C "$MAILBOX" push origin "HEAD:$BRANCH" >/dev/null
-
 log "WAIT FOR AUTOMATIC RESULT"
 RESULT="$MAILBOX/remote_steward/results/${STAMP}-steward-self-test.json"
 for _ in $(seq 1 24); do
-  sleep 5
-  git -C "$MAILBOX" fetch origin "$BRANCH" >/dev/null 2>&1 || true
-  git -C "$MAILBOX" rebase "origin/$BRANCH" >/dev/null 2>&1 || true
   [ -f "$RESULT" ] && break
+  sleep 5
 done
 
 if [ ! -f "$RESULT" ]; then
