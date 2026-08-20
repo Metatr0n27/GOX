@@ -17,8 +17,6 @@ echo "uid=$(id -u 2>/dev/null || true)"
 echo "home=$HOME"
 
 echo
-echo(){ builtin echo "$@"; }
-
 echo "== OS =="
 if [ -f /etc/os-release ]; then
   cat /etc/os-release
