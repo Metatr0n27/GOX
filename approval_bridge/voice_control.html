@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GOX Voice Control</title>
+<style>
+body{font-family:system-ui;margin:24px;max-width:720px}button{font-size:20px;padding:14px 18px;margin:8px;border-radius:12px}#heard{font-size:22px;margin:18px 0;padding:12px;border:1px solid #bbb;border-radius:12px}.ok{background:#e8f7e8}.warn{background:#fff3cd}
+</style>
+</head>
+<body>
+<h1>GOX Voice Control</h1>
+<p>Say: “show approvals”, “approve first”, “deny first”, or “open GitHub device”.</p>
+<button id="talk">🎤 Speak</button>
+<div id="heard">Waiting.</div>
+<div id="status"></div>
+<script>
+const qp=new URLSearchParams(location.search); const token=qp.get('token')||'';
+const heard=document.getElementById('heard'); const status=document.getElementById('status');
+async function getApprovals(){const r=await fetch('/api/approvals?token='+encodeURIComponent(token)); if(!r.ok) throw new Error('Authorization required'); return await r.json();}
+async function decide(id,decision){const r=await fetch('/api/approvals/'+encodeURIComponent(id)+'/decision?token='+encodeURIComponent(token),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({decision})}); if(!r.ok) throw new Error('Decision failed'); return await r.json();}
+async function handle(text){text=text.toLowerCase(); heard.textContent='Heard: '+text; try{
+ if(text.includes('open github')){location.href='https://github.com/login/device';return;}
+ if(text.includes('show')&&text.includes('approval')){const a=await getApprovals(); status.textContent=a.length? a.map((x,i)=>`${i+1}. ${x.title||x.id} — ${x.action||''}`).join('\n'):'No approvals waiting.'; return;}
+ if((text.includes('approve')||text.includes('deny'))&&text.includes('first')){const a=await getApprovals(); if(!a.length){status.textContent='No approvals waiting.';return;} const d=text.includes('approve')?'approve':'deny'; await decide(a[0].id,d); status.textContent=`${d.toUpperCase()}: ${a[0].title||a[0].id}`; return;}
+ status.textContent='Command not recognized.';
+ }catch(e){status.textContent=e.message;}}
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(!SR){status.textContent='Speech recognition is not supported in this browser. Use the approval buttons instead.'; document.getElementById('talk').disabled=true;}else{const r=new SR();r.lang='en-US';r.interimResults=false;r.maxAlternatives=1;r.onresult=e=>handle(e.results[0][0].transcript);r.onerror=e=>status.textContent='Voice error: '+e.error;document.getElementById('talk').onclick=()=>{status.textContent='Listening…';r.start();};}
+</script>
+</body>
+</html>
