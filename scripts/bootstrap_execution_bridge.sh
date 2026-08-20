@@ -1,5 +1,5 @@
-#!/bin/sh
-set -eu
+#!/usr/bin/env bash
+set -euo pipefail
 
 BRANCH="gox/execution-bridge-v1"
 REPO_URL="https://github.com/Metatr0n27/GOX.git"
@@ -16,14 +16,18 @@ echo "user=$(id -un 2>/dev/null || true)"
 echo "uid=$(id -u 2>/dev/null || true)"
 echo "home=$HOME"
 
-echo "\n== OS =="
+echo
+echo(){ builtin echo "$@"; }
+
+echo "== OS =="
 if [ -f /etc/os-release ]; then
   cat /etc/os-release
 else
   uname -a
 fi
 
-echo "\n== Core tools =="
+echo
+echo "== Core tools =="
 for x in git python3 node npm; do
   if command -v "$x" >/dev/null 2>&1; then
     echo "$x=$(command -v "$x")"
@@ -33,7 +37,8 @@ for x in git python3 node npm; do
   fi
 done
 
-echo "\n== Agent runtimes =="
+echo
+echo "== Agent runtimes =="
 for x in herdr codex claude gemini opencode; do
   if command -v "$x" >/dev/null 2>&1; then
     echo "$x=$(command -v "$x")"
@@ -43,14 +48,24 @@ for x in herdr codex claude gemini opencode; do
   fi
 done
 
-echo "\n== Repository =="
+echo
+echo "== Repository =="
 if [ -d "$TARGET/.git" ]; then
   echo "Using existing repo: $TARGET"
   cd "$TARGET"
+  if [ -n "$(git status --porcelain)" ]; then
+    echo "ERROR: existing GOX repo has uncommitted changes. No checkout/reset performed."
+    echo "Please preserve or commit those changes before rerunning."
+    exit 21
+  fi
   git remote -v || true
   git fetch origin "$BRANCH"
-  git checkout "$BRANCH" || git checkout -b "$BRANCH" "origin/$BRANCH"
-  git reset --hard "origin/$BRANCH"
+  if git show-ref --verify --quiet "refs/heads/$BRANCH"; then
+    git checkout "$BRANCH"
+    git merge --ff-only "origin/$BRANCH"
+  else
+    git checkout -b "$BRANCH" "origin/$BRANCH"
+  fi
 else
   if [ -e "$TARGET" ]; then
     echo "ERROR: $TARGET exists but is not a git repository. No destructive action taken."
@@ -63,15 +78,18 @@ fi
 echo "repo=$TARGET"
 echo "commit=$(git rev-parse HEAD)"
 
-echo "\n== Python tests =="
+echo
+echo "== Python tests =="
 python3 -m unittest discover -s execution_bridge/tests -v
 
-echo "\n== Dry-run compile test =="
+echo
+echo "== Dry-run compile test =="
 python3 execution_bridge/bridge.py execution_bridge/examples/first_dollar_job.json \
   --config execution_bridge/config.json \
   --dry-run
 
-echo "\n== Runtime probe =="
+echo
+echo "== Runtime probe =="
 set +e
 python3 execution_bridge/bridge.py execution_bridge/examples/first_dollar_job.json \
   --config execution_bridge/config.json \
@@ -81,15 +99,17 @@ set -e
 
 echo "runtime_probe_exit=$PROBE_CODE"
 
-echo "\n== Safety status =="
+echo
+echo "== Safety status =="
 if [ "$(id -u)" = "0" ]; then
   echo "WARNING: currently running as root. Do not launch paid-job autonomous agents as root."
-  echo "NEXT: bootstrap a dedicated gox service account before production execution."
+  echo "NEXT: create/use a dedicated non-root gox service account before production execution."
 else
   echo "non_root_execution=yes"
 fi
 
-echo "\n== Result =="
+echo
+echo "== Result =="
 if [ "$PROBE_CODE" -eq 0 ]; then
   echo "BRIDGE_CODE=PASS"
   echo "RUNTIME_CONFIG=AVAILABLE"
