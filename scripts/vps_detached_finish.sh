@@ -28,6 +28,6 @@ echo "GOX_DETACHED_SESSION=STARTED"
 echo "SESSION=$SESSION"
 echo "LOG=$LOG"
 echo "SAFE_TO_LEAVE_BROWSER=yes"
-echo "Attaching to the persistent session now..."
-sleep 1
-exec tmux attach -t "$SESSION"
+echo "Hostinger does not need to stay open."
+echo "To check later: tmux has-session -t $SESSION 2>/dev/null && echo RUNNING || echo STOPPED; tail -n 80 $LOG"
+exit 0
