@@ -3,7 +3,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-import bridge
+try:
+    from execution_bridge import bridge
+except ImportError:
+    import bridge
 
 
 class BridgeTests(unittest.TestCase):
