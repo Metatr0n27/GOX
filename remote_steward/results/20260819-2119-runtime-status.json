@@ -1,0 +1,18 @@
+{
+  "id": "20260819-2119-runtime-status",
+  "action": "runtime_status",
+  "started_at": "2026-08-20T06:17:19.604985+00:00",
+  "status": "complete",
+  "runs": [
+    {
+      "cmd": [
+        "bash",
+        "-lc",
+        "command -v herdr || true; herdr --version 2>/dev/null || true; command -v claude || true; claude --version 2>/dev/null || true; python3 --version; git --version"
+      ],
+      "exit_code": 0,
+      "output": "/root/.local/bin/herdr\nherdr 0.8.2\n/root/.hermes/node/bin/claude\n2.1.212 (Claude Code)\nPython 3.12.3\ngit version 2.43.0\n"
+    }
+  ],
+  "finished_at": "2026-08-20T06:17:19.702112+00:00"
+}
