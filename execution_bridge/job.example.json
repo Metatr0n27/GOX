@@ -1,0 +1,33 @@
+{
+  "objective": "Complete one bounded ready-to-work Easy Job with the lowest possible owner effort and produce verified deliverables.",
+  "constraints": [
+    "Do not impersonate another person.",
+    "Do not perform account-owner-only actions.",
+    "Do not claim completion without evidence.",
+    "Prefer work that can begin without waiting for a bespoke client approval."
+  ],
+  "allowed_actions": [
+    "Read supplied task inputs.",
+    "Transform data/files in the isolated job workspace.",
+    "Run tests and validators.",
+    "Prepare submission-ready outputs and notes."
+  ],
+  "approval_gates": [
+    "Login, MFA, CAPTCHA, identity verification, payment or withdrawal actions.",
+    "Final external submission when the platform requires the human account holder.",
+    "Any destructive or irreversible production action."
+  ],
+  "required_evidence": [
+    "Input snapshot or source reference.",
+    "Generated deliverable paths.",
+    "Test/validation output.",
+    "Any remaining human-bound action."
+  ],
+  "tests": [
+    "Verify required output files exist.",
+    "Verify output schema/format matches the task.",
+    "Verify no required field is missing.",
+    "Verify the task can be resumed from recorded state."
+  ],
+  "definition_of_done": "The requested task output is complete, validated, submission-ready, and all remaining owner-only actions are explicitly isolated and documented."
+}
