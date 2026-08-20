@@ -1,54 +1,72 @@
 # GOX FIRST-DOLLAR CANONICAL EASY PROMPT
 
 ## OBJECTIVE
-Find and complete the highest-confidence legitimate paid task that can produce the first verified dollar with the least owner effort and shortest realistic payout path.
+Produce the first verified legitimate dollar with the least owner effort, using an already-available paid task queue whenever possible.
+
+## CURRENT PILOT
+Primary source: Clickworker regular jobs.
+Secondary source: UHRS through Clickworker after the owner completes any required onboarding and worker-only qualification.
+Fallback: immediately move to the next qualified Easy Job source if no suitable live task is available.
 
 ## CURRENT TRUTH
 - Revenue priority is immediate.
 - Ready-to-work hourly, piece-rate, or microtask work outranks speculative client acquisition.
-- GOX should automate only what platform rules permit.
+- Payout latency is acceptable if payment legitimacy and acceptance path are strong.
+- GOX may assist only where the platform and specific task rules permit it.
 - Owner/account-bound actions remain with the correct human identity.
-- Voice and approval controls should minimize owner effort.
-- Execution must preserve evidence, state, and rollback/restart safety.
+- Assessments or judgments explicitly required to be unaided/human-only stay with the owner.
+- Execution must preserve evidence, identity separation, confidentiality, state, and duplicate-submit protection.
 
 ## INPUTS
 - current First-Dollar Paper Stack
-- current GOX verified capability registry
-- current task-source candidates
-- platform terms/eligibility constraints
+- current Easy Jobs lane
+- authentic First-Dollar Pilot Team
+- current verified GOX capability registry
+- current live task/source screen or task metadata
+- platform terms and task-specific instructions
 - current runtime/steward/approval status
 - prior task results and economics
 
 ## CANONICAL TASK
-Independently identify the single best next action toward the first verified dollar. Evaluate available paid work by legitimacy, availability now, eligibility, payout latency, expected gross pay, platform fees, owner minutes required, GOX automation fit, execution risk, and repeatability. Reject any option that requires fabricated experience, account sharing, prohibited automation, unauthorized access, or uncertain payment legitimacy.
+Independently determine the single best next action toward the first verified dollar. For any visible task, evaluate payment legitimacy, actual availability, worker eligibility, task instructions, confidentiality, AI/tool/automation rules, expected gross pay, owner minutes, rejection risk, payout latency, repeatability, and GOX assistance fit.
 
-For the best candidate, return:
-1. exact task/source
-2. why it is available now
-3. platform-rule/eligibility check
-4. verified GOX capability match
-5. owner-bound steps
-6. agent-executable steps
-7. QA checks
-8. expected payout and owner-time estimate
-9. exact submission/acceptance evidence required
-10. the next canonical prompt if this task completes or fails
+Do not infer permission to automate. If platform or task rules are unclear, classify the work as OWNER/HUMAN REVIEW or reject it until clarified.
+
+For the selected task return:
+1. exact source and task identifier without exposing restricted content
+2. evidence that the task is actually available now
+3. eligibility and payment-path check
+4. platform/task assistance-policy classification: PERMITTED / HUMAN-ONLY / UNCLEAR
+5. verified GOX capability match
+6. owner-bound steps
+7. agent-executable steps
+8. independent-agent analyses when permitted
+9. synthesis and QA checks
+10. expected gross/net and owner-time estimate
+11. exact submission/acceptance evidence to capture
+12. payout/economics ledger fields
+13. next canonical prompt if task completes, rejects, disappears, or proves unsuitable
 
 ## ENSEMBLE RULE
-Run multiple identical agents independently on this exact prompt. Do not assign specialist identities before the independent runs. Synthesize only after independent outputs exist.
+When assistance is permitted, run multiple independent agents on the same canonical task instructions. Do not let independent workers see each other's proposed answers before synthesis.
 
 ## JUDGE RULE
-Prefer the option with the strongest evidence of real payment and lowest owner-hour cost, not the most interesting technical project.
+Prefer the path with the strongest probability of real accepted payment per owner minute. Do not optimize merely for the highest advertised hourly rate.
 
-## STOP CONDITIONS
+## OWNER-ONLY STOP CONDITIONS
 Pause only for:
-- login/MFA/CAPTCHA
+- account registration/login/MFA/CAPTCHA
 - identity/eligibility confirmation
-- payment or sensitive permission
-- platform-required human-only work
-- consequential/final submission when owner approval is required
+- payment or tax setup
+- signatures/consent
+- platform-required human-only assessment or task
+- any action whose rules explicitly require the account holder personally
+- consequential final submission when owner approval is required
 
 Otherwise continue automatically.
 
+## CONFIDENTIALITY RULE
+Never commit confidential task text, customer data, credentials, or restricted screenshots to a public repository. Preserve task IDs, hashes, timestamps, rule classifications, economics, and permitted evidence instead.
+
 ## DEFINITION OF DONE
-The first verified dollar is recorded with source, task ID, submission evidence, payout evidence, gross pay, fees, net pay, owner minutes, compute cost, effective dollars per owner-hour, and lessons fed back into the next prompt.
+The first verified dollar is recorded with source, task ID, submission evidence, acceptance/payout evidence, gross pay, fees, net pay, owner minutes, compute cost, effective dollars per owner-hour, and lessons fed back into the next Easy Prompt.
