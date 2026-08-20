@@ -145,6 +145,8 @@ def ensure_schema(db: sqlite3.Connection) -> None:
 
 
 def parse_opportunity(data: dict) -> Opportunity:
+    raw_time_to_cash = data.get('time_to_cash_hours', 9999)
+    time_to_cash_hours = 9999.0 if raw_time_to_cash is None else float(raw_time_to_cash)
     return Opportunity(
         id=str(data['id']),
         source=str(data.get('source', 'unknown')),
@@ -154,7 +156,7 @@ def parse_opportunity(data: dict) -> Opportunity:
         payout_probability=float(data.get('payout_probability', 0) or 0),
         owner_minutes=float(data.get('owner_minutes', 0) or 0),
         gox_share=float(data.get('gox_share', 0) or 0),
-        time_to_cash_hours=float(data.get('time_to_cash_hours', 9999) or 9999),
+        time_to_cash_hours=time_to_cash_hours,
         repeatability=float(data.get('repeatability', 0) or 0),
         payout_certainty=float(data.get('payout_certainty', 0) or 0),
         rules_verdict=str(data.get('rules_verdict', 'UNCLEAR')),
