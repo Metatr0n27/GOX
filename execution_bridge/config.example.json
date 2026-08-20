@@ -1,0 +1,11 @@
+{
+  "runtime": {
+    "executable": "codex",
+    "args": [],
+    "prompt_via_stdin": true
+  },
+  "limits": {
+    "agent_timeout_seconds": 900,
+    "max_parallel_agents": 3
+  }
+}
