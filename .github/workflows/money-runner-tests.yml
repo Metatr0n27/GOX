@@ -1,0 +1,27 @@
+name: Money Runner Tests
+
+on:
+  push:
+    branches:
+      - gox/money-runner-v1
+  pull_request:
+    paths:
+      - 'revenue/money_runner.py'
+      - 'revenue/test_money_runner.py'
+      - 'revenue/easy_prompt_maximizer.py'
+      - 'revenue/test_easy_prompt_maximizer.py'
+      - 'orchestration/easy_all.py'
+      - 'orchestration/explain_mode.py'
+      - 'orchestration/idea_vault.py'
+      - 'orchestration/test_easy_all.py'
+      - '.github/workflows/money-runner-tests.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m unittest revenue.test_money_runner revenue.test_easy_prompt_maximizer orchestration.test_easy_all -v
